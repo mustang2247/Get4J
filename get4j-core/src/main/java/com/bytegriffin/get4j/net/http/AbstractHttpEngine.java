@@ -21,6 +21,7 @@ import org.jsoup.select.Elements;
 import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
+import com.bytegriffin.get4j.util.Sleep;
 import com.bytegriffin.get4j.util.StringUtil;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -182,11 +183,7 @@ public abstract class AbstractHttpEngine {
             }
             millis = random.choice();
         }
-        try {
-            Thread.sleep(millis * 1000);
-        } catch (InterruptedException e) {
-            logger.error("Http请求时间间隔时出错：", e);
-        }
+        Sleep.seconds(millis);
     }
 
     /**

@@ -14,6 +14,7 @@ import com.bytegriffin.get4j.probe.ProbePageSerial.ProbePage;
 import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.FileUtil;
 import com.bytegriffin.get4j.util.MD5Util;
+import com.bytegriffin.get4j.util.Sleep;
 import com.bytegriffin.get4j.util.StringUtil;
 import com.google.common.base.Strings;
 
@@ -145,14 +146,7 @@ public class PageChangeProber {
                 stop();
                 break;
             }
-
-            try {
-                Thread.sleep(fetchProbeSleep);
-            } catch (InterruptedException e) {
-            	EmailSender.sendMail(e);
-                ExceptionCatcher.addException(page.getSeedName(), e);
-                logger.error("探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]时出错。", e);
-            }
+            Sleep.seconds(fetchProbeSleep);
             logger.info("正在探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]的页面变化。。。");
         }
 

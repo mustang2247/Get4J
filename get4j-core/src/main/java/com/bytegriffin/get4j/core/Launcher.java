@@ -27,6 +27,7 @@ import com.bytegriffin.get4j.store.FailUrlStorage;
 import com.bytegriffin.get4j.util.ConcurrentQueue;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.FileUtil;
+import com.bytegriffin.get4j.util.Sleep;
 import com.bytegriffin.get4j.util.CommandUtil;
 import com.bytegriffin.get4j.util.StringUtil;
 import com.google.common.base.Strings;
@@ -99,16 +100,11 @@ public class Launcher extends TimerTask implements Command {
 			executorService.execute(worker);
 		} else {
 			executorService = Executors.newFixedThreadPool(threadNum);
-			long waitThread = 3000;
 			latch = new CountDownLatch(threadNum);
 			for (int i = 0; i < threadNum; i++) {
 				Worker worker = new Worker(seed.getSeedName(), latch);
 				executorService.execute(worker);
-				try {// 必须要加等待，否则运行太快会导致只有一个线程抓取，其它线程因为运行太快urlQueue里面为空而一直处于等待
-					Thread.sleep(waitThread);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				Sleep.seconds(3);
 			}
 		}
 		// 等待所有工作线程执行完毕，再将坏链dump出来
@@ -128,11 +124,7 @@ public class Launcher extends TimerTask implements Command {
 		// 关闭资源同步器
 		if (DefaultConfig.resource_synchronizer != null) {
 			while (BatchScheduler.resources.size() > 0) {
-				try {
-					Thread.sleep(DefaultConfig.sync_batch_time * 1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				Sleep.seconds(DefaultConfig.sync_batch_time);
 			}
 			if (batch != null) {
 				BatchScheduler.stop();

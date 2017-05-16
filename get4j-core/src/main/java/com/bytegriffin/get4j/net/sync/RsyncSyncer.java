@@ -4,12 +4,8 @@ import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.bytegriffin.get4j.core.ExceptionCatcher;
-import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.CommandUtil;
+import com.bytegriffin.get4j.util.Sleep;
 import com.google.common.collect.Sets;
 
 /**
@@ -21,7 +17,6 @@ import com.google.common.collect.Sets;
  */
 public class RsyncSyncer implements Syncer {
 
-    private static final Logger logger = LogManager.getLogger(RsyncSyncer.class);
     private String host;
     private String username;
     // module或者dir模式，如果是module模式，需要服务器端配置module模块，它是同步根目录，
@@ -52,13 +47,8 @@ public class RsyncSyncer implements Syncer {
     public void sync() {
         for (String command : commands) {
             CommandUtil.executeShell(command);
-            try {//如果不同的seed太多，可以减慢同步速度
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                logger.error("Rsync同步资源时出错。", e);
-                EmailSender.sendMail(e);
-            	ExceptionCatcher.addException(e);
-            }
+            //如果不同的seed太多，可以减慢同步速度
+            Sleep.seconds(1);
         }
 
     }

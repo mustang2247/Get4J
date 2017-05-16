@@ -5,12 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.bytegriffin.get4j.core.ExceptionCatcher;
-import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.CommandUtil;
+import com.bytegriffin.get4j.util.Sleep;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -22,7 +18,7 @@ import com.google.common.collect.Maps;
  * @see com.bytegriffin.get4j.core.Launcher
  */
 public class ScpSyncer implements Syncer {
-    private static final Logger logger = LogManager.getLogger(ScpSyncer.class);
+
     private String host;
     private String username;
     private String port;
@@ -74,13 +70,8 @@ public class ScpSyncer implements Syncer {
             }
             String command = "scp -pB -P " + port + " " + sb.toString() + " " + username + "@" + host + ":" + dir + seedname;
             CommandUtil.executeShell(command);
-            try { //如果不同的seed太多，可以减慢同步速度
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                logger.error("Scp同步资源时出错。", e);
-                EmailSender.sendMail(e);
-            	ExceptionCatcher.addException(e);
-            }
+            //如果不同的seed太多，可以减慢同步速度
+            Sleep.seconds(1);
         }
     }
 
