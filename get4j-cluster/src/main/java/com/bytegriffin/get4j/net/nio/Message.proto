@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option java_package = "com.bytegriffin.get4j.net.nio";
+option java_outer_classname = "Message";
+
+message Request {  
+  string requestId = 1;
+  string seedName = 2;  
+  string pageMode = 3;  
+  string fetchUrl = 4;  
+  string fetchProbeSelector = 5;
+  string fetchProbeSleep = 6;
+  string fetchDetailSelector = 7;
+  uint32 fetchTotalPages = 8;
+  string fetchInterval = 9; 
+  string fetchStart = 10;
+  bool fetchJavascriptSupport = 11;
+  uint32 fetchSleep = 12;
+  string fetchSleepRange = 13;
+  string downloadDisk = 14;
+  string parseClassImpl = 15;
+  string parseElementSelector = 16;
+  string storeJdbc = 17;
+  string storeMongodb = 18;
+  string storeLuceneIndex = 19;
+};
+
+message Response {  
+  string requestId = 1;
+  string status = 2;  
+  string desc = 3;  
+};

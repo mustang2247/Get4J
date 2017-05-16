@@ -12,7 +12,7 @@
         </Console>
 
         <!--这个会打印出所有的信息，每次大小超过size，则这size大小的日志会自动存入按年份-月份建立的文件夹下面并进行压缩，作为存档 -->
-        <RollingFile name="RollingFile" fileName="log/get4j-cluster.log" filePattern="log/get4j_%d{yyyy-MM-dd}_%i.log">
+        <RollingFile name="RollingFile" fileName="log/get4j-cluster.log" filePattern="log/get4j-cluster_%d{yyyy-MM-dd}_%i.log">
             <PatternLayout charset="UTF-8" pattern="%d %p %c %L %m%n"/>
             <Policies>
                 <!-- 每24小时更新一次 -->
@@ -26,10 +26,16 @@
     </appenders>
     <!--然后定义logger，只有定义了logger并引入的appender，appender才会生效 -->
     <loggers>
+    	<Logger name="io.netty" level="info" additivity="false"> 
+    		<appender-ref ref="RollingFile"/>
+            <appender-ref ref="Console"/>
+    	</Logger>
+    
         <!--建立一个默认的root的logger -->
         <root level="trace">
             <appender-ref ref="RollingFile"/>
             <appender-ref ref="Console"/>
         </root>
+        
     </loggers>
 </configuration>
