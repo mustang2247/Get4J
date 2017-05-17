@@ -8,21 +8,22 @@ import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.conf.DefaultConfig;
 import com.bytegriffin.get4j.core.Globals;
+import com.bytegriffin.get4j.core.Initializer;
+import com.bytegriffin.get4j.core.UrlQueue;
 import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.ConcurrentQueue;
 import com.bytegriffin.get4j.util.FileUtil;
 import com.google.common.collect.Lists;
-import com.bytegriffin.get4j.core.UrlQueue;
 
 /**
  * 坏链存储器<br>
  * 负责爬虫在爬取过程中访问不了或者根本不是链接的坏链存储在本地文件中
  */
-public final class FailUrlStorage {
+public final class FailUrlStorage extends Initializer{
 
 	private static final Logger logger = LogManager.getLogger(FailUrlStorage.class);
 
-	public static void init() {
+	public  void init() {
 		FileUtil.makeDiskFile(DefaultConfig.fail_url_file);
 		logger.info("爬虫系统的坏链文件的初始化完成。");
 	}

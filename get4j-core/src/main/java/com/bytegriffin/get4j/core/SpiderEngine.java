@@ -33,7 +33,6 @@ import com.bytegriffin.get4j.parse.AutoDelegateParser;
 import com.bytegriffin.get4j.probe.PageChangeProber;
 import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.store.DBStorage;
-import com.bytegriffin.get4j.store.FailUrlStorage;
 import com.bytegriffin.get4j.store.FreeProxyStorage;
 import com.bytegriffin.get4j.store.LuceneIndexStorage;
 import com.bytegriffin.get4j.store.MongodbStorage;
@@ -56,6 +55,7 @@ public class SpiderEngine {
     private List<Process> fronts;
     private List<Process> backs;
     private List<Process> downloads;
+    private List<Initializer> inits;
 
     private static final Logger logger = LogManager.getLogger(SpiderEngine.class);
 
@@ -71,7 +71,7 @@ public class SpiderEngine {
     }
     
     /**
-     * 增加前端的loader
+     * 增加前端的loader，供外部项目调用
      * @param processes
      * @return
      */
@@ -81,7 +81,7 @@ public class SpiderEngine {
 	}
     
     /**
-     * 增加前端的loader
+     * 增加前端的loader，供外部项目调用
      * @param processes
      * @return
      */
@@ -91,12 +91,22 @@ public class SpiderEngine {
 	}
     
     /**
-     * 增加下载的loader
+     * 增加下载的loader，供外部项目调用
      * @param processes
      * @return
      */
     public SpiderEngine addDownloader(List<Process> downloads) {
 		this.downloads = downloads;
+		return this;
+	}
+    
+    /**
+     * 增加初始化类，供外部项目调用
+     * @param fronts
+     * @return
+     */
+    public SpiderEngine addInitializer(List<Initializer> inits) {
+		this.inits = inits;
 		return this;
 	}
 
@@ -365,9 +375,6 @@ public class SpiderEngine {
             // chain.addProcess(new RedisStorage());
             // subProcess.append("-RedisStorage");
 
-            // 添加坏链接存储功能
-            FailUrlStorage.init();
-
             Globals.FETCH_PAGE_MODE_CACHE.put(seedName, seed.getPageMode());
 
             if (chain.list.size() > 0) {
@@ -379,6 +386,8 @@ public class SpiderEngine {
                 System.exit(1);
             }
         }
+
+        Initializer.loads(inits);
     }
 
     /**
