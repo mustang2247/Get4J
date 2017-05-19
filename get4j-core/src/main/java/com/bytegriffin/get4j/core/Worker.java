@@ -5,7 +5,7 @@ import java.util.concurrent.CountDownLatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.bytegriffin.get4j.util.ConcurrentQueue;
+import com.bytegriffin.get4j.util.Queue;
 import com.google.common.base.Strings;
 import com.bytegriffin.get4j.core.UrlQueue;
 
@@ -30,14 +30,13 @@ public class Worker implements Runnable {
             return;
         }
         Chain chain = Globals.CHAIN_CACHE.get(seedName);
-        ConcurrentQueue<String> urlQueue = UrlQueue.getUnVisitedLink(seedName);
+        Queue<String> urlQueue = UrlQueue.getUnVisitedLink(seedName);
         logger.info("线程[" + Thread.currentThread().getName() + "]开始执行任务[" + seedName + "]。。。");
-        while (urlQueue != null && !urlQueue.isEmpty()) {
-            Object obj = urlQueue.outFirst();
-            if (obj == null) {
+        while (urlQueue != null && !UrlQueue.isEmptyUnVisitedLinks(seedName)) {
+            String url = UrlQueue.outFirst(seedName);
+            if (Strings.isNullOrEmpty(url)) {
                 break;
             }
-            String url = obj.toString();
             chain.execute(new Page(seedName, url));
             UrlQueue.newVisitedLink(seedName, url);
         }

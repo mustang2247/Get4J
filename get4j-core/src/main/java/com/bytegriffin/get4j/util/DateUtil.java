@@ -5,21 +5,22 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public final class DateUtil {
 
+	private static final Logger logger = LogManager.getLogger(DateUtil.class);
     public static final String yyyyMMdd = "yyyy-MM-dd";
     public static final String yyyyMMddHHmmss = "yyyy-MM-dd HH:mm:ss";
 
     public static Date strToDate(String str) {
-        return strToDate(str, yyyyMMddHHmmss);
-    }
-
-    public static Date strToDate(String str, String pattern) {
-        SimpleDateFormat format = new SimpleDateFormat(pattern);
+    	SimpleDateFormat format = new SimpleDateFormat(yyyyMMddHHmmss);
         try {
             return format.parse(str);
         } catch (ParseException e) {
-            e.printStackTrace();
+            logger.error("时间格式出错，正确格式为[yyyy-MM-dd HH:mm:ss]：", e);
+            System.exit(1);
         }
         return null;
     }

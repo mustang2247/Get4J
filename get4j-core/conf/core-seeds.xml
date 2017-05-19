@@ -10,7 +10,7 @@
         </description>
         <property>
             <name>worker.thread.count</name>
-            <value>3</value>
+            <value>1</value>
             <description>非必填项。爬虫工作线程数量，默认值default是1。根据url数量来动态分配</description>
         </property>
         <property>

@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.conf.AbstractConfig;
+import com.bytegriffin.get4j.conf.ClusterNode;
 import com.bytegriffin.get4j.conf.Configuration;
 import com.bytegriffin.get4j.conf.DefaultConfig;
 import com.bytegriffin.get4j.conf.DynamicField;
@@ -37,7 +38,6 @@ import com.bytegriffin.get4j.store.FreeProxyStorage;
 import com.bytegriffin.get4j.store.LuceneIndexStorage;
 import com.bytegriffin.get4j.store.MongodbStorage;
 import com.bytegriffin.get4j.util.DateUtil;
-
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
@@ -69,7 +69,7 @@ public class SpiderEngine {
         }
         return me;
     }
-    
+
     /**
      * 增加前端的loader，供外部项目调用
      * @param processes
@@ -79,7 +79,7 @@ public class SpiderEngine {
 		this.fronts = fronts;
 		return this;
 	}
-    
+
     /**
      * 增加前端的loader，供外部项目调用
      * @param processes
@@ -89,7 +89,7 @@ public class SpiderEngine {
 		this.backs = backs;
 		return this;
 	}
-    
+
     /**
      * 增加下载的loader，供外部项目调用
      * @param processes
@@ -99,14 +99,17 @@ public class SpiderEngine {
 		this.downloads = downloads;
 		return this;
 	}
-    
+
     /**
-     * 增加初始化类，供外部项目调用
-     * @param fronts
+     * 设置cluster节点初始化信息，在分布式情况下调用
+     * @param clusterNode
      * @return
      */
-    public SpiderEngine addInitializer(List<Initializer> inits) {
-		this.inits = inits;
+    public SpiderEngine setClusterNode(ClusterNode clusterNode) {
+    	if(clusterNode == null){
+    		return this;
+    	}
+		this.inits = clusterNode.getInitializers();
 		return this;
 	}
 
@@ -234,6 +237,9 @@ public class SpiderEngine {
     		return;
     	}
     	for(DynamicField p : dynamicFields){
+    		if(Strings.isNullOrEmpty(p.getSeedName()) || p.getFields() == null || p.getFields().isEmpty()){
+    			continue;
+    		}
     		Globals.DYNAMIC_FIELDS_CACHE.put(p.getSeedName(), p.getFields());
     	}
     }

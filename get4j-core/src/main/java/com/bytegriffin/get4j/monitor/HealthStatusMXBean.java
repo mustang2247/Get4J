@@ -4,11 +4,11 @@ import java.util.List;
 
 public interface HealthStatusMXBean {
 
-	public int getVisitedUrlCount();
+	public long getVisitedUrlCount();
 
-	public int getUnVisitUrlCount();
+	public long getUnVisitUrlCount();
 
-	public int getFailedUrlCount();
+	public long getFailedUrlCount();
 
 	public List<String> getExceptions();
 

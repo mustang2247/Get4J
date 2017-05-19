@@ -389,13 +389,13 @@ public final class FileUtil {
 			newUrl = newUrl.substring(0, newUrl.indexOf("?"));
 		}
 
-		// 如果是newUrl为www.aaa.com，那么直接将
-		if (Strings.isNullOrEmpty(newUrl)) {
+		// 如果是newUrl为空或者www.aaa.com，那么直接将它改名成index.html
+		if (Strings.isNullOrEmpty(newUrl) ) {
 			newUrl = DefaultConfig.home_page_name;
 		}
 
 		// 判断动态页面url中没有后缀名的自动加上相应的后缀名
-		if (!isFindPage(newUrl)) {
+		if (!isFindPage(newUrl) ) {
 			newUrl += "." + suffix;
 		}
 
@@ -494,6 +494,20 @@ public final class FileUtil {
 			EmailSender.sendMail(e);
 			ExceptionCatcher.addException(e);
 		}
+	}
+
+	/**
+	 * 判断文件是否已经存在磁盘上，有的话就无需下载
+	 * @param fileName
+	 * @param fileSize
+	 * @return
+	 */
+	public static boolean isExistsDiskFile(String fileName, long fileSize){
+		File newFile = new File(fileName);
+		if (newFile.exists() && newFile.length() == fileSize){
+			return true;
+		}
+		return false;
 	}
 
 	/**

@@ -315,27 +315,28 @@ public abstract class AbstractHttpEngine {
      * @param statusCode 返回状态码
      * @param page       page对象
      * @param logger     logger日志
+     * @param url     url
      * @return boolean
      */
-    static boolean isVisit(int statusCode, Page page, Logger logger) {
+    static boolean isVisit(int statusCode, String seedName, String url, Logger logger) {
         // 404/403/500/503 ：此类url不会重复请求，直接把url记录下来以便查明情况
         if (HttpStatus.SC_NOT_FOUND == statusCode || HttpStatus.SC_FORBIDDEN == statusCode
                 || HttpStatus.SC_INTERNAL_SERVER_ERROR == statusCode
                 || HttpStatus.SC_SERVICE_UNAVAILABLE == statusCode) {
-            UrlQueue.newFailVisitedUrl(page.getSeedName(), page.getUrl());
+            UrlQueue.newFailVisitedUrl(seedName, url);
             Preconditions.checkArgument(false, "线程[" + Thread.currentThread().getName() + "]访问种子[" 
-            		+ page.getSeedName() + "]的url["+page.getUrl()+"]请求发送"+statusCode+"错误。");
-            logger.error("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url["
-                    + page.getUrl() + "]时发生[" + statusCode + "]错误。");
+            		+ seedName + "]的url["+url+"]请求发送"+statusCode+"错误。");
+            logger.error("线程[" + Thread.currentThread().getName() + "]访问种子[" + seedName + "]的url["
+                    + url + "]时发生[" + statusCode + "]错误。");
             return false;
         } else if (HttpStatus.SC_MOVED_PERMANENTLY == statusCode || HttpStatus.SC_MOVED_TEMPORARILY == statusCode
                 || HttpStatus.SC_SEE_OTHER == statusCode || HttpStatus.SC_TEMPORARY_REDIRECT == statusCode) {
             // 301/302：此类url是跳转链接，访问连接后获取Response中头信息的Location属性才是真实地址
-            logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url["
-                    + page.getUrl() + "]时发生[" + statusCode + "]错误。");
+            logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + seedName+ "]的url["
+                    + url + "]时发生[" + statusCode + "]错误。");
         } else if (HttpStatus.SC_OK != statusCode) {
-            logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url["
-                    + page.getUrl() + "]时发生[" + statusCode + "]错误。");
+            logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + seedName + "]的url["
+                    + url + "]时发生[" + statusCode + "]错误。");
         }
         return true;
     }

@@ -1,9 +1,11 @@
 package com.bytegriffin.get4j.core;
 
-import com.bytegriffin.get4j.util.ConcurrentQueue;
-
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.bytegriffin.get4j.net.http.UrlAnalyzer;
+import com.bytegriffin.get4j.util.ConcurrentQueue;
+import com.bytegriffin.get4j.util.Queue;
 
 /**
  * Url队列 <br>
@@ -11,202 +13,341 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class UrlQueue {
 
-    //key: seed name  value: 该seed所涉及的所有已访问过的链接
-    private static ConcurrentHashMap<String, ConcurrentQueue<String>> VISITED_LINKS = new ConcurrentHashMap<>();
-    //key: seed name  value: 该seed所涉及的所有未访问过的链接
-    private static ConcurrentHashMap<String, ConcurrentQueue<String>> UN_VISITED_LINKS = new ConcurrentHashMap<>();
-    //key: seed name  value: 该seed所涉及的所有访问失败的所有url
-    private static ConcurrentHashMap<String, ConcurrentQueue<String>> FAIL_VISITED_URLS = new ConcurrentHashMap<>();
-    //key: seed name  value: 该seed所涉及的所有已访问过的资源文件 css/js等
-    private static ConcurrentHashMap<String, ConcurrentQueue<String>> VISITED_RESOURCES = new ConcurrentHashMap<>();
-    //key: seed name  value: 该seed所涉及的所有未访问过的资源文件 css/js等
-    private static ConcurrentHashMap<String, ConcurrentQueue<String>> UN_VISITED_RESOURCES = new ConcurrentHashMap<>();
+	// key: seed name value: 该seed所涉及的所有已访问过的链接
+	private static ConcurrentHashMap<String, Queue<String>> VISITED_LINKS = new ConcurrentHashMap<>();
+	// key: seed name value: 该seed所涉及的所有未访问过的链接
+	private static ConcurrentHashMap<String, Queue<String>> UN_VISITED_LINKS = new ConcurrentHashMap<>();
+	// key: seed name value: 该seed所涉及的所有访问失败的所有url
+	private static ConcurrentHashMap<String, Queue<String>> FAIL_VISITED_URLS = new ConcurrentHashMap<>();
+	// key: seed name value: 该seed所涉及的所有已访问过的资源文件 css/js等
+	private static ConcurrentHashMap<String, Queue<String>> VISITED_RESOURCES = new ConcurrentHashMap<>();
+	// key: seed name value: 该seed所涉及的所有未访问过的资源文件 css/js等
+	private static ConcurrentHashMap<String, Queue<String>> UN_VISITED_RESOURCES = new ConcurrentHashMap<>();
+	// for redis prefix key name
+	private static String visitedLinks_prefix = "visited_links_";
+	private static String unVisitedLinks_prefix = "un_visited_links_";
+	private static String failVisitedUrls_prefix = "fail_visited_urls_";
+	private static String visitedResources_prefix = "visited_resources_";
+	private static String unVisitedResources_prefix = "un_visited_resources_";
 
-    public static int getVisitedUrlCount(String seedName){
-    	return getSize(VISITED_LINKS.get(seedName));
-    }
+	private static Queue<String> redis_queue;
+	// 是否加载本地Queue，否则加载RedisQueue
+	private static boolean isLocalQueue = true;
 
-    public static int getUnVisitedUrlCount(String seedName){
-    	return getSize(UN_VISITED_LINKS.get(seedName));
-    }
+	public static void registerRedisQueue(Queue<String> redisQueue) {
+		redis_queue = redisQueue;
+		isLocalQueue = false;
+	}
 
-    public static int getFailVisitedUrlCount(String seedName){
-    	return getSize(FAIL_VISITED_URLS.get(seedName));
-    }
+	public static long getVisitedUrlCount(String seedName) {
+		if (isLocalQueue) {
+			return getSize(VISITED_LINKS.get(seedName));
+		} else {
+			return redis_queue.size(visitedLinks_prefix + seedName);
+		}
+	}
 
-    private static int getSize(ConcurrentQueue<String> queues){
-    	if(queues == null || queues.isEmpty()){
-    		return 0;
-    	}
-    	return queues.size();
-    }
+	public static long getUnVisitedUrlCount(String seedName) {
+		if (isLocalQueue) {
+			return getSize(UN_VISITED_LINKS.get(seedName));
+		} else {
+			return redis_queue.size(unVisitedLinks_prefix + seedName);
+		}
+	}
 
-    /**
-     * 追加未访问的links队列<br/>
-     * 首先判断新抓取的link是否在已访问的队列中，<br/>
-     * 然后判断是否在未抓取的队列中<br/>
-     * 如果都不在的话则将其加进未访问的队列中<br/>
-     *
-     * @param seedName String
-     * @param links    HashSet<String>
-     */
-    public static void addUnVisitedLinks(String seedName, HashSet<String> links) {
-        if (links == null || links.size() == 0) {
-            return;
-        }
-        for (String link : links) {
-            ConcurrentQueue<String> constr = getVisitedLink(seedName);
-            if (constr == null || !constr.contains(link)) {
-                newUnVisitedLink(seedName, link);
-            }
-        }
-    }
+	public static long getFailVisitedUrlCount(String seedName) {
+		if (isLocalQueue) {
+			return getSize(FAIL_VISITED_URLS.get(seedName));
+		} else {
+			return redis_queue.size(failVisitedUrls_prefix + seedName);
+		}
+	}
 
-    /**
-     * 追加已访问的links队列<br/>
-     * 首先判断新抓取的link是否在已访问的队列中，<br/>
-     * 然后判断是否在未抓取的队列中<br/>
-     * 如果都不在的话则将其加进未访问的队列中<br/>
-     *
-     * @param seedName String
-     * @param links    HashSet<String>
-     */
-    public static void addVisitedLinks(String seedName, HashSet<String> links) {
-        if (links == null || links.size() == 0) {
-            return;
-        }
-        for (String link : links) {
-            ConcurrentQueue<String> constr = getVisitedLink(seedName);
-            if (constr == null || !constr.contains(link)) {
-                newVisitedLink(seedName, link);
-            }
-        }
-    }
+	private static long getSize(Queue<String> queues) {
+		if (queues == null || queues.isEmpty()) {
+			return 0;
+		}
+		return queues.size();
+	}
 
-    /**
-     * 新增未访问的link到队列中
-     *
-     * @param seedName String
-     * @param link     String
-     */
-    public static void newUnVisitedLink(String seedName, String link) {
-        ConcurrentQueue<String> queue = UrlQueue.UN_VISITED_LINKS.get(seedName);
-        if (queue == null) {
-            queue = new ConcurrentQueue<>();
-            UrlQueue.UN_VISITED_LINKS.put(seedName, queue);
-        }
-        queue.add(link);
-    }
+	/**	
+	 * 追加未访问的links队列<br/>
+	 * 首先判断新抓取的link是否在已访问的队列中，<br/>
+	 * 然后判断是否在未抓取的队列中<br/>
+	 * 如果都不在的话则将其加进未访问的队列中<br/>
+	 *
+	 * @param seedName    String
+	 * @param links  HashSet<String>
+	 */
+	public static void addUnVisitedLinks(String seedName, HashSet<String> links) {
+		if (links == null || links.size() == 0) {
+			return;
+		}
+		if (isLocalQueue) {
+			for (String link : links) {
+				Queue<String> queues = UN_VISITED_LINKS.get(seedName);
+				if (queues == null) {
+					queues = new ConcurrentQueue<>();
+					UN_VISITED_LINKS.put(seedName, queues);
+				}
+				Queue<String> visitedLinks = VISITED_LINKS.get(seedName);
+				if (visitedLinks == null || !visitedLinks.contains(link)) {
+					queues.add(link);
+				}
+			}
+		} else {
+			for (String link : links) {
+				if(!redis_queue.contains(visitedLinks_prefix + seedName, link)){
+					redis_queue.add(unVisitedLinks_prefix + seedName, link);
+				}
+			}
+		}
+	}
 
-    /**
-     * 新增未访问的resource到队列中
-     *
-     * @param seedName     String
-     * @param resourceLink String
-     */
-    public static void newUnVisitedResource(String seedName, String resourceLink) {
-        ConcurrentQueue<String> queue = UrlQueue.UN_VISITED_RESOURCES.get(seedName);
-        if (queue == null) {
-            queue = new ConcurrentQueue<>();
-            UrlQueue.UN_VISITED_RESOURCES.put(seedName, queue);
-        }
-        queue.add(resourceLink);
-    }
+	/**
+	 * 新增未访问的link到队列中
+	 *
+	 * @param seedName    String
+	 * @param link  String
+	 */
+	public static void newUnVisitedLink(String seedName, String link) {
+		link = UrlAnalyzer.filterUrlPound(link);
+		Queue<String> queues = null;
+		if (isLocalQueue) {
+			queues = UN_VISITED_LINKS.get(seedName);
+			if (queues == null) {
+				queues = new ConcurrentQueue<>();
+				UN_VISITED_LINKS.put(seedName, queues);
+			}
+			Queue<String> visitedLinks = VISITED_LINKS.get(seedName);
+			if (visitedLinks == null || !visitedLinks.contains(link)) {
+				queues.add(link);
+			}
+		} else {
+			if(!redis_queue.contains(visitedLinks_prefix + seedName, link)){
+				redis_queue.add(unVisitedLinks_prefix + seedName, link);
+			}
+		}
+	}
 
-    /**
-     * 新增已访问的link到队列中
-     *
-     * @param seedName String
-     * @param link     String
-     */
-    public static void newVisitedLink(String seedName, String link) {
-        ConcurrentQueue<String> queue = UrlQueue.VISITED_LINKS.get(seedName);
-        if (queue == null) {
-            queue = new ConcurrentQueue<>();
-            UrlQueue.VISITED_LINKS.put(seedName, queue);
-        }
-        queue.add(link);
-    }
+	/**
+	 * 删除头元素
+	 * @param seedName
+	 */
+	public static String outFirst(String seedName) {
+		if (isLocalQueue) {
+			return UN_VISITED_LINKS.get(seedName).outFirst();
+		} else {
+			return redis_queue.outFirst(unVisitedLinks_prefix + seedName);
+		}
+	}
 
-    /**
-     * 新增已访问的resource到队列中
-     *
-     * @param seedName String
-     * @param resource String
-     */
-    public static void newVisitedResource(String seedName, String resource) {
-        ConcurrentQueue<String> queue = UrlQueue.VISITED_RESOURCES.get(seedName);
-        if (queue == null) {
-            queue = new ConcurrentQueue<>();
-            UrlQueue.VISITED_RESOURCES.put(seedName, queue);
-        }
-        queue.add(resource);
-    }
+	/**
+	 * 判断未访问链接是否为空
+	 * @param seedName
+	 * @return
+	 */
+	public static boolean isEmptyUnVisitedLinks(String seedName) {
+		if (isLocalQueue) {
+			return UN_VISITED_LINKS.get(seedName).isEmpty();
+		} else {
+			return redis_queue.isEmpty(unVisitedLinks_prefix + seedName);
+		}
+	}
 
-    /**
-     * 增加已访问失败的url（包括link、资源文件）
-     *
-     * @param seedName String
-     * @param failurl  String
-     */
-    public static void newFailVisitedUrl(String seedName, String failurl) {
-        ConcurrentQueue<String> queue = UrlQueue.FAIL_VISITED_URLS.get(seedName);
-        if (queue == null) {
-            queue = new ConcurrentQueue<>();
-            UrlQueue.FAIL_VISITED_URLS.put(seedName, queue);
-        }
-        queue.add(failurl);
-    }
+	/**
+	 * 新增未访问的resource到队列中
+	 *
+	 * @param seedName   String
+	 * @param resourceLink   String
+	 */
+	public static void newUnVisitedResource(String seedName, String resourceLink) {
+		Queue<String> queues = null;
+		if (isLocalQueue) {
+			queues = UN_VISITED_RESOURCES.get(seedName);
+			if (queues == null) {
+				queues = new ConcurrentQueue<>();
+				UN_VISITED_RESOURCES.put(seedName, queues);
+			}
+			queues.add(resourceLink);
+		} else {
+			redis_queue.add(unVisitedResources_prefix + seedName, resourceLink);
+		}
+	}
 
-    /**
-     * 获取未访问link队列
-     *
-     * @param seedName String
-     * @return ConcurrentQueue<String>
-     */
-    public static ConcurrentQueue<String> getUnVisitedLink(String seedName) {
-        return UN_VISITED_LINKS.get(seedName);
-    }
+	/**
+	 * 新增已访问的link到队列中
+	 *
+	 * @param seedName    String
+	 * @param link   String
+	 */
+	public static void newVisitedLink(String seedName, String link) {
+		Queue<String> queues = null;
+		if (isLocalQueue) {
+			queues = VISITED_LINKS.get(seedName);
+			if (queues == null) {
+				queues = new ConcurrentQueue<>();
+				VISITED_LINKS.put(seedName, queues);
+			}
+			queues.add(link);
+		} else {
+			redis_queue.add(visitedLinks_prefix + seedName, link);
+		}
+	}
 
-    /**
-     * 获取未访问resource队列
-     *
-     * @param seedName String
-     * @return ConcurrentQueue<String>
-     */
-    public static ConcurrentQueue<String> getUnVisitedResource(String seedName) {
-        return UN_VISITED_RESOURCES.get(seedName);
-    }
+	/**
+	 * 新增已访问的resource到队列中
+	 *
+	 * @param seedName   String
+	 * @param resource   String
+	 */
+	public static void newVisitedResource(String seedName, String resource) {
+		Queue<String> queues = null;
+		if (isLocalQueue) {
+			queues = VISITED_RESOURCES.get(seedName);
+			if (queues == null) {
+				queues = new ConcurrentQueue<>();
+				VISITED_RESOURCES.put(seedName, queues);
+			}
+			queues.add(resource);
+		} else {
+			redis_queue.add(visitedResources_prefix + seedName, resource);
+		}
+	}
 
+	/**
+	 * 增加已访问失败的url（包括link、资源文件）
+	 *
+	 * @param seedName     String
+	 * @param failurl  String
+	 */
+	public static void newFailVisitedUrl(String seedName, String failurl) {
+		Queue<String> queues = null;
+		if (isLocalQueue) {
+			queues = FAIL_VISITED_URLS.get(seedName);
+			if (queues == null) {
+				queues = new ConcurrentQueue<>();
+				FAIL_VISITED_URLS.put(seedName, queues);
+			}
+			queues.add(failurl);
+		} else {
+			redis_queue.add(failVisitedUrls_prefix + seedName, failurl);
+		}
+	}
 
-    /**
-     * 获取已访问link队列
-     *
-     * @param seedName String
-     * @return ConcurrentQueue<String>
-     */
-    public static ConcurrentQueue<String> getVisitedLink(String seedName) {
-        return VISITED_LINKS.get(seedName);
-    }
+	/**
+	 * 获取未访问link队列
+	 *
+	 * @param seedName  String
+	 * @return ConcurrentQueue<String>
+	 */
+	public static Queue<String> getUnVisitedLink(String seedName) {
+		if (isLocalQueue) {
+			return UN_VISITED_LINKS.get(seedName);
+		} else {
+			return redis_queue.getQueue(unVisitedLinks_prefix + seedName);
+		}
+	}
 
-    /**
-     * 获取已访问resource队列
-     *
-     * @param seedName String
-     * @return ConcurrentQueue<String>
-     */
-    public static ConcurrentQueue<String> getVisitedResource(String seedName) {
-        return VISITED_RESOURCES.get(seedName);
-    }
+	/**
+	 * 获取未访问resource队列
+	 *
+	 * @param seedName     String
+	 * @return ConcurrentQueue<String>
+	 */
+	public static Queue<String> getUnVisitedResource(String seedName) {
+		if (isLocalQueue) {
+			return UN_VISITED_RESOURCES.get(seedName);
+		} else {
+			return redis_queue.getQueue(unVisitedResources_prefix + seedName);
+		}
+	}
 
-    /**
-     * 获取已访问失败的url队列
-     *
-     * @param seedName String
-     * @return ConcurrentQueue<String>
-     */
-    public static ConcurrentQueue<String> getFailVisitedUrl(String seedName) {
-        return FAIL_VISITED_URLS.get(seedName);
-    }
+	/**
+	 * 获取已访问link队列
+	 *
+	 * @param seedName  String
+	 * @return ConcurrentQueue<String>
+	 */
+	public static Queue<String> getVisitedLink(String seedName) {
+		if (isLocalQueue) {
+			return VISITED_LINKS.get(seedName);
+		} else {
+			return redis_queue.getQueue(visitedLinks_prefix + seedName);
+		}
+	}
+
+	/**
+	 * 清空已访问link队列
+	 * @param seedName
+	 */
+	public static void clearVisitedLink(String seedName) {
+		if (isLocalQueue) {
+			Queue<String> visitedlink = getVisitedLink(seedName);
+			if (visitedlink != null && !visitedlink.isEmpty()) {
+				visitedlink.clear();
+			}
+		} else {
+			 redis_queue.clear(visitedLinks_prefix + seedName);
+		}
+	}
+	
+	/**
+	 * 清空已访问失败url队列
+	 * @param seedName
+	 */
+	public static void clearFailVisitedUrl(String seedName) {
+		if (isLocalQueue) {
+			Queue<String> failVisitedUrl = getFailVisitedUrl(seedName);
+			if (failVisitedUrl != null && !failVisitedUrl.isEmpty()) {
+				failVisitedUrl.clear();
+			}
+		} else {
+			 redis_queue.clear(failVisitedUrls_prefix + seedName);
+		}
+	}
+
+	/**
+	 * 获取已访问resource队列
+	 *
+	 * @param seedName  String
+	 * @return ConcurrentQueue<String>
+	 */
+	public static Queue<String> getVisitedResource(String seedName) {
+		if (isLocalQueue) {
+			return VISITED_RESOURCES.get(seedName);
+		} else {
+			return redis_queue.getQueue(visitedResources_prefix + seedName);
+		}
+	}
+
+	/**
+	 * 清空已访问resource队列
+	 * @param seedName
+	 */
+	public static void clearVisitedResource(String seedName) {
+		if (isLocalQueue) {
+			Queue<String> visitedresource = getVisitedResource(seedName);
+			if (visitedresource != null && !visitedresource.isEmpty()) {
+				visitedresource.clear();
+			}
+		} else {
+			 redis_queue.clear(visitedResources_prefix + seedName);
+		}
+	}
+
+	/**
+	 * 获取已访问失败的url队列
+	 *
+	 * @param seedName  String
+	 * @return ConcurrentQueue<String>
+	 */
+	public static Queue<String> getFailVisitedUrl(String seedName) {
+		if (isLocalQueue) {
+			return FAIL_VISITED_URLS.get(seedName);
+		} else {
+			return redis_queue.getQueue(failVisitedUrls_prefix + seedName);
+		}
+	}
 
 }

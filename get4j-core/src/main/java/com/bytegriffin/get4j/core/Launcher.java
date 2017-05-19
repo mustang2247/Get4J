@@ -24,7 +24,6 @@ import com.bytegriffin.get4j.net.sync.RsyncSyncer;
 import com.bytegriffin.get4j.net.sync.ScpSyncer;
 import com.bytegriffin.get4j.probe.PageChangeProber;
 import com.bytegriffin.get4j.store.FailUrlStorage;
-import com.bytegriffin.get4j.util.ConcurrentQueue;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.FileUtil;
 import com.bytegriffin.get4j.util.Sleep;
@@ -138,7 +137,7 @@ public class Launcher extends TimerTask implements Command {
 			}
 		}
 		// 清空这次抓取访问过的url集合，以方便下次轮训抓取时过滤重复链接
-		clearVisitedUrlQueue(seed);
+		clearVisitedUrlQueue(seed.getSeedName());
 		// 清空异常信息
 		ExceptionCatcher.clearExceptions();
 	}
@@ -217,8 +216,9 @@ public class Launcher extends TimerTask implements Command {
 				int totalPage = Integer.valueOf(totalPages);
 				for (int i = 0; i < totalPage; i++) {
 					int pn = pagenum + i;
-					UrlQueue.newUnVisitedLink(seed.getSeedName(), prefix + pn + suffix);
-					list.add(prefix + pn + suffix);
+					String newurl = prefix + pn + suffix;
+					UrlQueue.newUnVisitedLink(seed.getSeedName(), newurl);
+					list.add(newurl);
 				}
 				Globals.LIST_URLS_CACHE.put(seed.getSeedName(), list);
 			}
@@ -231,19 +231,13 @@ public class Launcher extends TimerTask implements Command {
 	 * 每次抓取完都要清空一次已访问的url集合，以方便下次继续抓取<br>
 	 * 否则在下次抓取时程序会判断内存中已经存在抓取过的url就不再去抓取
 	 *
-	 * @param seed
-	 *            seed
+	 * @param seed    seed
 	 * @see UrlQueue.addUnVisitedLinks()
 	 */
-	private void clearVisitedUrlQueue(Seed seed) {
-		ConcurrentQueue<String> visitedlink = UrlQueue.getVisitedLink(seed.getSeedName());
-		if (visitedlink != null && !visitedlink.isEmpty()) {
-			visitedlink.clear();
-		}
-		ConcurrentQueue<String> visitedResource = UrlQueue.getVisitedResource(seed.getSeedName());
-		if (visitedResource != null && !visitedResource.isEmpty()) {
-			visitedResource.clear();
-		}
+	private void clearVisitedUrlQueue(String seedName) {
+		UrlQueue.clearVisitedLink(seedName);
+		UrlQueue.clearVisitedResource(seedName);
+		UrlQueue.clearFailVisitedUrl(seedName);
 	}
 
 	// 设置资源同步

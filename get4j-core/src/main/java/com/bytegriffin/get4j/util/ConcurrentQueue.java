@@ -6,20 +6,21 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.google.common.collect.Lists;
 
-public class ConcurrentQueue<E> {
+public class ConcurrentQueue<E> implements Queue<E>{
 
-    private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock(true);
+	private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock(true);
 
-    private final Lock readLock = readWriteLock.readLock();
+	private final Lock readLock = readWriteLock.readLock();
 
-    private final Lock writeLock = readWriteLock.writeLock();
+	private final Lock writeLock = readWriteLock.writeLock();
 
-    public final LinkedList<E> list = Lists.newLinkedList();
+	private final LinkedList<E> list = Lists.newLinkedList();
 
+    @Override
     public void add(E e) {
         writeLock.lock();
         try {
-            if (!list.contains(e)) {
+            if (!contains(e)) {
                 list.add(e);
             }
         } finally {
@@ -27,7 +28,8 @@ public class ConcurrentQueue<E> {
         }
     }
 
-    public Object get(int index) {
+    @Override
+    public E get(int index) {
         readLock.lock();
         try {
             return list.get(index);
@@ -36,7 +38,8 @@ public class ConcurrentQueue<E> {
         }
     }
 
-    public int size() {
+    @Override
+    public long size() {
         readLock.lock();
         try {
             return list.size();
@@ -44,7 +47,13 @@ public class ConcurrentQueue<E> {
             readLock.unlock();
         }
     }
+    
+	@Override
+	public long size(String queueName) {
+		return size() ;
+	}
 
+    @Override
     public void clear() {
         writeLock.lock();
         try {
@@ -54,6 +63,7 @@ public class ConcurrentQueue<E> {
         }
     }
 
+    @Override
     public boolean isEmpty() {
         writeLock.lock();
         try {
@@ -63,7 +73,8 @@ public class ConcurrentQueue<E> {
         }
     }
 
-    public Object outFirst() {
+    @Override
+    public E outFirst() {
         writeLock.lock();
         try {
             if (!list.isEmpty()) {
@@ -75,9 +86,44 @@ public class ConcurrentQueue<E> {
         }
     }
 
+	@Override
+	public E outFirst(String queueName) {
+		return null;
+	}
+
+    @Override
     public boolean contains(E e) {
         return list.contains(e);
     }
 
+	@Override
+	public boolean contains(String queueName, E e) {
+		return list.contains(e);
+	}
+
+	@Override
+	public Queue<E> getQueue(String queueName) {
+		return null;
+	}
+
+	@Override
+	public void add(String key, E e) {
+		add(e);
+	}
+
+	@Override
+	public LinkedList<E> getList() {
+		return list;
+	}
+
+	@Override
+	public void clear(String key) {
+		 clear();
+	}
+
+	@Override
+	public boolean isEmpty(String queueName) {
+		return isEmpty();
+	}
 
 }

@@ -74,7 +74,7 @@ public class ListDetailFetcher implements Process {
             if (links != null && links.size() > 0) {
                 UrlQueue.addUnVisitedLinks(page.getSeedName(), links);
                 page.setDetailLinks(links);
-                logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]的详情Url总数是[" + UrlQueue.getUnVisitedLink(page.getSeedName()).size() + "]个。");
+                logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]的详情Url总数是[" + UrlQueue.getUnVisitedUrlCount(page.getSeedName()) + "]个。");
             }
 
         } else {// 访问的是detail url

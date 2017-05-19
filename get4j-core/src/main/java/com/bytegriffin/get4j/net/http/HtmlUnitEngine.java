@@ -163,7 +163,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
             WebResponse response = htmlpage.getWebResponse();
 
             int statusCode = response.getStatusCode();
-            boolean isvisit = isVisit(statusCode, page, logger);
+            boolean isvisit = isVisit(statusCode, page.getSeedName(), url, logger);
             if (!isvisit) {
                 HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManagerShared(true);
                 Globals.HTTP_CLIENT_BUILDER_CACHE.put(page.getSeedName(), httpClientBuilder);
@@ -174,12 +174,11 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
             if (contentlength > big_file_max_size) {//大于10m
                 HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManagerShared(true);
                 Globals.HTTP_CLIENT_BUILDER_CACHE.put(page.getSeedName(), httpClientBuilder);
-                boolean isdone = HttpClientEngine.downloadBigFile(page, contentlength);
+                boolean isdone = HttpClientEngine.downloadBigFile(page.getSeedName(),url, contentlength);
                 if (isdone) {
                     return page;
                 }
             }
-
 
             String content = response.getContentAsString();
             String contentType = response.getContentType();
@@ -238,7 +237,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
             WebResponse response = htmlpage.getWebResponse();
 
             int statusCode = response.getStatusCode();
-            boolean isvisit = isVisit(statusCode, page, logger);
+            boolean isvisit = isVisit(statusCode, page.getSeedName(), page.getUrl(), logger);
             if (!isvisit) {
                 return null;
             }

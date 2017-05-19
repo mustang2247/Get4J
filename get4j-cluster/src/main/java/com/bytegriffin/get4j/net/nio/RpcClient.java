@@ -25,9 +25,6 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Log4J2LoggerFactory;
 
-/**
- * 单客户端多连接
- */
 public final class RpcClient {
 
 	private static final Logger logger = LogManager.getLogger(RpcClient.class);

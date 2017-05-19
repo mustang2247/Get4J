@@ -5,7 +5,7 @@ import com.bytegriffin.get4j.Spider;
 public class TestBigFileDownload {
 
     public static void main(String[] args) throws Exception {
-        String url = "http://dldir1.qq.com/qqfile/qq/QQ8.9.1/20453/QQ8.9.1.exe";
+        String url = "http://downpack.baidu.com/baidunews_AndroidPhone_1014720b.apk";
         //url="https://down1.3987.com/2010/cs6_extended_3987com.zip";
         //url = "https://avatars1.githubusercontent.com/u/5327447?v=3&s=40";
         //url = "http://www.zxjsq.net/";

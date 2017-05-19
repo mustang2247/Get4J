@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.Element;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -46,6 +47,9 @@ public class DynamicFieldXmlHandler extends AbstractConfig {
             for (Element field : fieldlist) {
                 String name = field.element(name_node).getStringValue();
                 String value = field.element(selector_node).getStringValue();
+                if(Strings.isNullOrEmpty(name) || Strings.isNullOrEmpty(value)){
+                	continue;
+                }
                 map.put(name, value);
                 mapping.setFields(map);
             }

@@ -15,6 +15,7 @@ import com.bytegriffin.get4j.annotation.Single;
 import com.bytegriffin.get4j.annotation.Site;
 import com.bytegriffin.get4j.annotation.Sync;
 import com.bytegriffin.get4j.conf.AbstractConfig;
+import com.bytegriffin.get4j.conf.ClusterNode;
 import com.bytegriffin.get4j.conf.Configuration;
 import com.bytegriffin.get4j.conf.ConfigurationXmlHandler;
 import com.bytegriffin.get4j.conf.Context;
@@ -649,8 +650,7 @@ public class Spider {
         for (Annotation an : ans) {
             String type = an.annotationType().getSimpleName();
             if ("ListDetail".equalsIgnoreCase(type)) {
-                boolean anno = clazz.isAnnotationPresent(ListDetail.class);
-                if (anno) {
+                if (clazz.isAnnotationPresent(ListDetail.class)) {
                     ListDetail seed = (ListDetail) clazz.getAnnotation(ListDetail.class);
                     this.pageMode(PageMode.list_detail);
                     this.fetchUrl(seed.url());
@@ -674,9 +674,9 @@ public class Spider {
                     this.lucene(seed.lucene());
                     this.hbase(seed.hbase());
                 }
+                this.parser(clazz);
             } else if ("Site".equalsIgnoreCase(type)) {
-                boolean anno = clazz.isAnnotationPresent(Site.class);
-                if (anno) {
+                if (clazz.isAnnotationPresent(Site.class)) {
                     Site seed = (Site) clazz.getAnnotation(Site.class);
                     this.pageMode(PageMode.site);
                     this.fetchUrl(seed.url());
@@ -699,9 +699,9 @@ public class Spider {
                     this.hbase(seed.hbase());
                     this.elementSelectParser(seed.parser());
                 }
+                this.parser(clazz);
             } else if ("Single".equalsIgnoreCase(type)) {
-                boolean anno = clazz.isAnnotationPresent(Single.class);
-                if (anno) {
+                if (clazz.isAnnotationPresent(Single.class)) {
                     Single seed = (Single) clazz.getAnnotation(Single.class);
                     this.pageMode(PageMode.single);
                     this.fetchUrl(seed.url());
@@ -723,9 +723,9 @@ public class Spider {
                     this.lucene(seed.lucene());
                     this.hbase(seed.hbase());
                 }
+                this.parser(clazz);
             } else if ("Cascade".equalsIgnoreCase(type)) {
-                boolean anno = clazz.isAnnotationPresent(Cascade.class);
-                if (anno) {//有两个Seed类，一个是annotation，一个是实体类
+                if (clazz.isAnnotationPresent(Cascade.class)) {//有两个Seed类，一个是annotation，一个是实体类
                     Cascade seed = (Cascade) clazz.getAnnotation(Cascade.class);
                     this.pageMode(PageMode.cascade);
                     this.fetchUrl(seed.url());
@@ -747,9 +747,9 @@ public class Spider {
                     this.lucene(seed.lucene());
                     this.hbase(seed.hbase());
                 }
+                this.parser(clazz);
             } else if ("Sync".equalsIgnoreCase(type)) {
-                boolean anno = clazz.isAnnotationPresent(Sync.class);
-                if (anno) {
+                if (clazz.isAnnotationPresent(Sync.class)) {
                     Sync sync = (Sync) clazz.getAnnotation(Sync.class);
                     if (AbstractConfig.ftp_node.equals(sync.protocal())) {
                         this.ftp(sync.host(), sync.port(), sync.username(), sync.password());
@@ -759,10 +759,8 @@ public class Spider {
                         this.scp(sync.host(), sync.username(), sync.dir(), sync.port());
                     }
                 }
-
             } else if ("Config".equalsIgnoreCase(type)) {
-            	 boolean anno = clazz.isAnnotationPresent(Sync.class);
-                 if (anno) {
+                 if (clazz.isAnnotationPresent(Sync.class)) {
                 	 Config config = (Config) clazz.getAnnotation(Config.class);
                 	 if("url".equalsIgnoreCase(config.downloadFilenameRule())){
                 		 this.downloadFilenameRule(true);
@@ -773,8 +771,6 @@ public class Spider {
                  }
             }
         }
-
-        this.parser(clazz);
         return this;
     }
 
@@ -814,6 +810,12 @@ public class Spider {
         return new Spider(PageMode.site);
     }
 
+    private ClusterNode clusterNode;
+    public Spider cluster(ClusterNode node){
+    	this.clusterNode = node;
+    	return this;
+    }
+
     /**
      * 爬虫开启运行
      * 检查Api设置是否设置正确，否则启动失败
@@ -830,7 +832,7 @@ public class Spider {
         if(dynamicField.getFields() != null && !dynamicField.getFields().isEmpty()){
         	dynamicField.setSeedName(seed.getSeedName());
         }
-        SpiderEngine.create().setSeed(seed).setResourceSync(resourceSync).setConfiguration(configuration).setDynamicField(dynamicField).build();
+        SpiderEngine.create().setClusterNode(clusterNode).setSeed(seed).setResourceSync(resourceSync).setConfiguration(configuration).setDynamicField(dynamicField).build();
     }
 
     /**

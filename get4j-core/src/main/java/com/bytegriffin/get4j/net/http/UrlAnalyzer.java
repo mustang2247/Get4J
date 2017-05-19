@@ -730,5 +730,17 @@ public final class UrlAnalyzer {
         return url;
     }
 
+    /**
+     * 过滤url链接后面的#  www.aaa.com## ==> www.aaa.com
+     * @param url
+     * @return
+     */
+    public static String filterUrlPound(String url){
+    	if(url.endsWith("#")){
+    		String newurl = url.substring(0, url.length()-1);
+    		return filterUrlPound(newurl);
+    	}
+    	return url;
+    }
 
 }

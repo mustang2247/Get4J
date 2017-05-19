@@ -13,7 +13,7 @@ public abstract class AbstractConfig {
     abstract Object load();
 
     // 配置文件路径
-    private static final String conf_path = System.getProperty("user.dir") + File.separator + "conf" + File.separator;
+    protected static final String conf_path = System.getProperty("user.dir") + File.separator + "conf" + File.separator;
     // xml配置文件
     protected final static String core_seeds_xml_file = conf_path + "core-seeds.xml";
     // xml格式检验文件

@@ -22,17 +22,17 @@ public class HealthStatus implements HealthStatusMXBean {
 	}
 
 	@Override
-	public int getVisitedUrlCount() {
+	public long getVisitedUrlCount() {
 		return UrlQueue.getVisitedUrlCount(seedName);
 	}
 
 	@Override
-	public int getUnVisitUrlCount() {
+	public long getUnVisitUrlCount() {
 		return UrlQueue.getUnVisitedUrlCount(seedName);
 	}
 
 	@Override
-	public int getFailedUrlCount() {
+	public long getFailedUrlCount() {
 		return UrlQueue.getFailVisitedUrlCount(seedName);
 	}
 
