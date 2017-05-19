@@ -43,15 +43,6 @@ public class Cluster {
 		 clusterNode = new ClusterNode();
 		 return new Cluster();
 	 }
-	
-    /**
-     * 设置初始化加载
-     * @return
-     */
-    private static List<Initializer> init(ClusterNode clusterNode){
-    	RedisStorage redis = new RedisStorage(clusterNode);
-    	return Lists.newArrayList(redis);
-    }
 
 	/**
 	 * 创建一个集群节点实例
@@ -67,7 +58,7 @@ public class Cluster {
         	logger.error("没有设置redis属性...");
         	System.exit(1);
         }
-        clusterNode.setInitializers(init(clusterNode));
+        clusterNode.setInitializers(buildInitializers(clusterNode));
         return clusterNode;
     }
 
@@ -117,6 +108,16 @@ public class Cluster {
         }
         return this;
     }
+    
+    /**
+     * 构建初始化节点
+     * @param node
+     * @return
+     */
+    private static List<Initializer>  buildInitializers(ClusterNode node){
+    	RedisStorage redis = new RedisStorage(node);
+    	return Lists.newArrayList(redis);
+    }
 
     /**
      * 配置文件调用入口
@@ -138,6 +139,7 @@ public class Cluster {
 
 		context = new Context(new ClusterNodeXmlHandler());
 		ClusterNode clusterNode = context.load();
+		clusterNode.setInitializers(buildInitializers(clusterNode));
 
 		SpiderEngine.create().setClusterNode(clusterNode).setSeeds(seeds).setResourceSync(synchronizer)
 				.setConfiguration(configuration).setDynamicFields(dynamicFields).build();
