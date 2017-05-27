@@ -31,7 +31,7 @@ public class Worker implements Runnable {
         }
         Chain chain = Globals.CHAIN_CACHE.get(seedName);
         Queue<String> urlQueue = UrlQueue.getUnVisitedLink(seedName);
-        logger.info("线程[" + Thread.currentThread().getName() + "]开始执行任务[" + seedName + "]。。。");
+        logger.info("线程[{}]开始执行任务[{}]。。。",Thread.currentThread().getName(), seedName);
         while (urlQueue != null && !UrlQueue.isEmptyUnVisitedLinks(seedName)) {
             String url = UrlQueue.outFirst(seedName);
             if (Strings.isNullOrEmpty(url)) {
@@ -40,7 +40,7 @@ public class Worker implements Runnable {
             chain.execute(new Page(seedName, url));
             UrlQueue.newVisitedLink(seedName, url);
         }
-        logger.info("线程[" + Thread.currentThread().getName() + "]完成任务[" + seedName + "]。。。");
+        logger.info("线程[{}]完成任务[{}]。。。",Thread.currentThread().getName(), seedName);
         latch.countDown();
     }
 

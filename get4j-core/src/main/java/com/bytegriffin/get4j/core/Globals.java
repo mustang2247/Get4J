@@ -9,6 +9,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.lucene.index.IndexWriter;
 import org.bson.Document;
 
+import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
 import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.HttpProxySelector;
@@ -25,6 +26,11 @@ import com.mongodb.client.MongoCollection;
  * 全局变量：缓存供全局访问的变量
  */
 public final class Globals {
+	
+	/**
+	 * 种子seed缓存，key : seed name key value : seed 
+	 */
+	public static Map<String, Seed> SEED_CACHE = Maps.newHashMap();
 
     /**
      * 当PageMode存放list列表url key：seed_name value：该seed下所有的列表url

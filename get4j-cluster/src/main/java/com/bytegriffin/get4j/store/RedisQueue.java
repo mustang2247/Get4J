@@ -24,12 +24,6 @@ public class RedisQueue<E> implements Queue<E> {
 	// key：redis_key  value：score count
 	private final Map<String, Integer> score_map = Maps.newHashMap();
 
-	private JedisCommands jedis;
-
-	public RedisQueue( JedisCommands jedisCommand) {
-		this.jedis = jedisCommand;
-	}
-
 	@Override
 	public void add(E e) {
         writeLock.lock();
@@ -45,6 +39,7 @@ public class RedisQueue<E> implements Queue<E> {
 	@Override
 	public void add(String key, E e) {
 		writeLock.lock();
+		JedisCommands jedis = RedisStorage.newJedis();
 		try {
 			if (!contains(e)) {
 				int count = 0;
@@ -55,6 +50,7 @@ public class RedisQueue<E> implements Queue<E> {
 				score_map.put(key, count);
 			}
 		} finally {
+			RedisStorage.close(jedis);
 			writeLock.unlock();
 		}
 	}
@@ -65,6 +61,23 @@ public class RedisQueue<E> implements Queue<E> {
 		try {
 			return list.get(index);
 		} finally {
+			readLock.unlock();
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public E get(String queueName, int index) {
+		readLock.lock();
+		JedisCommands jedis = RedisStorage.newJedis();
+		try {
+			Set<String> set =  jedis.zrange(queueName, 0, index);
+			if(set == null || set.isEmpty()){
+				return null;
+			}
+			return (E) set.iterator().next();
+		} finally {
+			RedisStorage.close(jedis);
 			readLock.unlock();
 		}
 	}
@@ -82,9 +95,11 @@ public class RedisQueue<E> implements Queue<E> {
 	@Override
 	public long size(String queueName) {
 		readLock.lock();
+		JedisCommands jedis = RedisStorage.newJedis();
 		try {
 			return jedis.zcard(queueName);
 		} finally {
+			RedisStorage.close(jedis);
 			readLock.unlock();
 		}
 	}
@@ -102,10 +117,12 @@ public class RedisQueue<E> implements Queue<E> {
 	@Override
 	public void clear(String queueName) {
 		writeLock.lock();
+		JedisCommands jedis = RedisStorage.newJedis();
 		try {
 			list.clear();
 			jedis.zremrangeByRank(queueName, 0, -1);
 		} finally {
+			RedisStorage.close(jedis);
 			writeLock.unlock();
 		}
 	}
@@ -123,9 +140,11 @@ public class RedisQueue<E> implements Queue<E> {
 	@Override
 	public boolean isEmpty(String queueName) {
 		writeLock.lock();
+		JedisCommands jedis = RedisStorage.newJedis();
 		try {
 			return !jedis.exists(queueName);
 		} finally {
+			RedisStorage.close(jedis);
 			writeLock.unlock();
 		}
 	}
@@ -147,6 +166,7 @@ public class RedisQueue<E> implements Queue<E> {
 	@Override
 	public E outFirst(String queueName) {
 		writeLock.lock();
+		JedisCommands jedis = RedisStorage.newJedis();
 		try {
 				Set<String> url = jedis.zrange(queueName, 0, 0);
 				long count = 0;
@@ -158,42 +178,77 @@ public class RedisQueue<E> implements Queue<E> {
 				}
 				return null;
 		} finally {
+			RedisStorage.close(jedis);
 			writeLock.unlock();
 		}
 	}
 
 	@Override
 	public boolean contains(E e) {
-		return list.contains(e);
+		readLock.lock();
+		try {
+			return list.contains(e);
+		} finally {
+			readLock.unlock();
+		}
 	}
 
 	@Override
 	public boolean contains(String queueName, E e) {
-		Long count = jedis.zrank(queueName, (String) e);
-		if(count != null && count > 0) {
-			return true;
+		readLock.lock();
+		JedisCommands jedis = RedisStorage.newJedis();
+		try {
+			Long count = jedis.zrank(queueName, (String) e);
+			if(count != null && count > 0) {
+				return true;
+			}
+			return false;
+		} finally {
+			RedisStorage.close(jedis);
+			readLock.unlock();
 		}
-		return false;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public Queue<E> getQueue(String queueName) {
-		Set<String> set = jedis.zrange(queueName, 0, -1);
-		RedisQueue<E> queue = new RedisQueue<E>(jedis);
-		queue.list.clear();
-		for(String str : set){
-			queue.list.add((E) str);
+		writeLock.lock();
+		JedisCommands jedis = RedisStorage.newJedis();
+		try {
+			Set<String> set = jedis.zrange(queueName, 0, -1);
+			RedisQueue<E> queue = new RedisQueue<E>();
+			queue.list.clear();
+			for(String str : set){
+				queue.list.add((E) str);
+			}
+			return queue;
+		} finally {
+			RedisStorage.close(jedis);
+			writeLock.unlock();
 		}
-		return queue;
 	}
 
-	/**
-	 * 不能单独调用此方法
-	 */
 	@Override
-	public LinkedList<E> getList() {
-		return list;
+	public LinkedList<E> getAll() {
+		readLock.lock();
+		try {
+			return list;
+		} finally {
+			readLock.unlock();
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Set<E> getAll(String queueName) {
+		readLock.lock();
+		JedisCommands jedis = RedisStorage.newJedis();
+		try {
+			return  (Set<E>) jedis.zrange(queueName, 0, -1);
+		} finally {
+			RedisStorage.close(jedis);
+			readLock.unlock();
+		}
 	}
 
 }

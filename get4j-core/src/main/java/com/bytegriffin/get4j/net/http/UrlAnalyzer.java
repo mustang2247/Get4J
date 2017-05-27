@@ -404,7 +404,6 @@ public final class UrlAnalyzer {
         page.setResources(resources);
     }
 
-
     /**
      * 使list页面中的avatar资源与detail link一一映射
      *
@@ -563,7 +562,11 @@ public final class UrlAnalyzer {
             } else if (obj instanceof JSONArray) {
                 Iterator<?> it = ((JSONArray) obj).iterator();
                 while (it.hasNext()) {
-                    JSONObject jsonObject = (JSONObject) it.next();
+                	Object object = it.next();
+                	if(object instanceof JSONArray){
+                		 break;
+                	}
+                    JSONObject jsonObject = (JSONObject) object;
                     travelJson(jsonObject, url);
                 }
             } else if (obj instanceof String && isStartHttpUrl(obj.toString())) {

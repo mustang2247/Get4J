@@ -250,11 +250,12 @@ public class Spider {
     }
 
     /**
-     * 资源选择器，支持Jsoup原生的选择器（html内容）或Jsonpath（json内容）<br>
+     * 资源选择器，配置时必须要包含在detail_link与avatar资源的外部资源选择器。<br>
+     * 支持Jsoup原生的选择器（html内容）或Jsonpath（json内容）<br>
      * 当此内容为JsonPath字符串的时候，如果json中提供的detail的链接是相对路径，那么此时这个值<br>
      * 的格式为：链接前缀+jsonpath。如果需要抓取多种资源可以用逗号","隔开，默认不填是全抓取。<br>
      * 注意：当启用list_detail模式时，资源特指的是avatar资源，即：与Detail_Link一一对应的资源，<br>
-     * 此项必须配置为包含detail_link与avatar的定位符；当启用非list_detail模式时，可抓取多种资源，每个选择器中间用逗号隔开。
+     * 当启用非list_detail模式时，可抓取多种资源，每个选择器中间用逗号隔开。
      *
      * @param resourceSelector Jsoup选择器支持的字符串
      * @return Spider

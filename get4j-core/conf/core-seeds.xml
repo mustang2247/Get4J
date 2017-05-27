@@ -68,9 +68,10 @@
             <name>fetch.resource.selector</name>
             <value></value>
             <description>
-                非必填项。页面资源的抓取选择器，支持Jsoup原生的css选择器和正则表达式或Jsonpath，一般用于下载资源文件，比如想抓取图片：[*.jpg]或者$.data[*].img。
-                当此内容为JsonPath字符串的时候，如果json中提供的detail的链接是相对路径，那么此时这个值的格式为：链接前缀+jsonpath，如果需要抓取多种资源可以用逗号","隔开，
-                默认不填或者不配置此项就是全抓取。注意：当启用list_detail模式时，资源特指的是avatar资源，即：与Detail_Link一一对应的资源，此项必须配置为包含detail_link
+                非必填项。页面资源选择器，配置时必须要包含在detail_link与avatar资源的外部资源选择器，支持Jsoup原生的css选择器和正则表达式或Jsonpath，
+                一般用于下载资源文件，比如想抓取图片：[*.jpg]或者$.data[*].img。当此内容为JsonPath字符串的时候，如果json中提供的detail的链接是相对路径，
+                那么此时这个值的格式为：链接前缀+jsonpath，如果需要抓取多种资源可以用逗号","隔开，默认不填或者不配置此项就是全抓取。
+                注意：当启用list_detail模式时，资源特指的是avatar资源，即：与Detail_Link一一对应的资源，此项必须配置为包含detail_link
                 与avatar的定位符；当启用非list_detail模式时，可抓取多种资源，每个选择器中间用逗号隔开。
             </description>
         </property>

@@ -1,6 +1,7 @@
 package com.bytegriffin.get4j.util;
 
 import java.util.LinkedList;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -37,6 +38,16 @@ public class ConcurrentQueue<E> implements Queue<E>{
             readLock.unlock();
         }
     }
+    
+	@Override
+	public E get(String queueName, int index) {
+		readLock.lock();
+        try {
+            return list.get(index);
+        } finally {
+            readLock.unlock();
+        }
+	}
 
     @Override
     public long size() {
@@ -112,8 +123,14 @@ public class ConcurrentQueue<E> implements Queue<E>{
 	}
 
 	@Override
-	public LinkedList<E> getList() {
+	public LinkedList<E> getAll() {
 		return list;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Set<E> getAll(String queueName) {
+		return (Set<E>) list;
 	}
 
 	@Override
@@ -125,5 +142,6 @@ public class ConcurrentQueue<E> implements Queue<E>{
 	public boolean isEmpty(String queueName) {
 		return isEmpty();
 	}
+
 
 }

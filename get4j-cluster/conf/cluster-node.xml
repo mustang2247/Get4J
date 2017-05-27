@@ -19,7 +19,7 @@
 		<name>redis.address</name>
 		<value>192.168.1.13:6379</value>
 		<description>
-			必填项。可以一个或者多个地址，格式：host1:port1|host2:port2
+			必填项。可以一个或者多个地址，格式：host1:port1,host2:port2
 		</description>
 	</property>
 
@@ -27,7 +27,15 @@
 		<name>redis.auth</name>
 		<value>foobared</value>
 		<description>
-			必填项。redis密码认证。
+			非必填项。redis密码认证。
+		</description>
+	</property>
+
+	<property>
+		<name>zookeeper.address</name>
+		<value>192.168.1.14:2181,192.168.1.14:2182,192.168.1.14:2183</value>
+		<description>
+			必填项。可以一个或者多个地址，格式：host1:port1,host2:port2
 		</description>
 	</property>
 

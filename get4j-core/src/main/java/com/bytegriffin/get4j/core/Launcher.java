@@ -35,7 +35,7 @@ import com.bytegriffin.get4j.core.UrlQueue;
 import com.jayway.jsonpath.JsonPath;
 
 /**
- * 加载器：轮询每个seed，将seed中url分配给各个worker工作线程
+ * Seed加载器：加载每个seed，将seed中url分配给各个worker工作线程
  */
 public class Launcher extends TimerTask implements Command {
 
@@ -47,12 +47,20 @@ public class Launcher extends TimerTask implements Command {
 	private boolean isDeleteDownloadFile = false;
 	private volatile boolean condition = true;
 	private HealthChecker healthChecker;
+	private WorkerStatusOpt workerStatusOpt;
+	private boolean isProbeMaster;
 
-	public Launcher(Seed seed) {
+	public Launcher(Seed seed, WorkerStatusOpt workerStatusOpt,  boolean isProbeMaster) {
 		this.seed = seed;
-		Globals.LAUNCHER_CACHE.put(seed.getSeedName(), this);
-		healthChecker = new HealthChecker();
-		healthChecker.register(seed.getSeedName());
+		if(Globals.LAUNCHER_CACHE.get(seed.getSeedName()) != null){
+			Globals.LAUNCHER_CACHE.put(seed.getSeedName(), this);
+		}
+		if(healthChecker != null){
+			healthChecker = new HealthChecker();
+			healthChecker.register(seed.getSeedName());
+		}
+		this.workerStatusOpt = workerStatusOpt;
+		this.isProbeMaster = isProbeMaster;
 	}
 
 	public boolean getCondition(){
@@ -62,7 +70,7 @@ public class Launcher extends TimerTask implements Command {
 	@Override
 	public void run() {
 		while (!condition) {
-			logger.info("种子[" + seed.getSeedName() + "]已停止工作...");
+			logger.info("种子[{}]已停止工作...", seed.getSeedName() );
 			try {
 				synchronized (this) {
 					this.wait();
@@ -71,9 +79,9 @@ public class Launcher extends TimerTask implements Command {
 				Thread.interrupted();
 			}
 		}
-		// 设置页面变化监测器
+		// 设置页面变化监测器，集群模式下需要每个节点配置probe选项
 		PageChangeProber probe = Globals.FETCH_PROBE_CACHE.get(seed.getSeedName());
-		if (probe != null) {
+		if (probe != null && isProbeMaster) {
 			probe.run();
 			working();
 			probe.start();
@@ -83,7 +91,7 @@ public class Launcher extends TimerTask implements Command {
 	}
 
 	private void working() {
-		Globals.PER_START_TIME_CACHE.put(seed.getSeedName(), DateUtil.getCurrentDate());
+		begin();
 		// 设置UrlQueue
 		setUnVisitedUrlQueue(seed);
 		// 设置资源同步
@@ -110,12 +118,12 @@ public class Launcher extends TimerTask implements Command {
 		try {
 			latch.await();
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			logger.info("种子[{}]在爬取工作中出现错误。", seed.getSeedName() , e);
 		}
 		// dump坏链
-		FailUrlStorage.dumpFile();
+		FailUrlStorage.dump();
 
-		// 关闭闲置链接，以便下一次多线程调用
+		// 关闭闲置链接，以便下一次多线程调用，减少服务器tcp链接数量，因此要重新初始化
 		HttpEngine he = Globals.HTTP_ENGINE_CACHE.get(seed.getSeedName());
 		if (he instanceof HttpClientEngine) {
 			HttpClientEngine.closeIdleConnection();
@@ -140,6 +148,31 @@ public class Launcher extends TimerTask implements Command {
 		clearVisitedUrlQueue(seed.getSeedName());
 		// 清空异常信息
 		ExceptionCatcher.clearExceptions();
+		 idle();
+	}
+
+	/**
+	 * 未开始或已爬取完成
+	 */
+	@Override
+	public void idle() {
+		if(workerStatusOpt != null){
+			workerStatusOpt.setIdleStatus(seed.getSeedName());
+		}
+		logger.info("线程[{}]完成种子[{}]的一次爬取工作。", Thread.currentThread().getName(), seed.getSeedName() );
+	}
+
+	/**
+	 * 正在爬取工作
+	 */
+	@Override
+	public void begin() {
+		//设置每次抓取开始时间，以便JMX统计每次抓取的开销时间
+		Globals.PER_START_TIME_CACHE.put(seed.getSeedName(), DateUtil.getCurrentDate());
+		if(workerStatusOpt != null){
+			workerStatusOpt.setRunStatus(seed.getSeedName());
+		}
+		logger.info("线程[{}]开始种子[{}]的爬取运行。",  Thread.currentThread().getName(), seed.getSeedName() );
 	}
 
 	/**
@@ -151,7 +184,7 @@ public class Launcher extends TimerTask implements Command {
 		synchronized (this) {
 			this.notify();
 		}
-		logger.info("种子[" + seed.getSeedName() + "]继续运行。");
+		logger.info("种子[{}]继续运行。",  seed.getSeedName() );
 	}
 
 	/**
@@ -161,7 +194,7 @@ public class Launcher extends TimerTask implements Command {
 	public void destory() {
 		if (this.cancel()) {
 			Globals.LAUNCHER_CACHE.remove(seed.getSeedName());
-			logger.info("种子[" + seed.getSeedName() + "]已被取消。");
+			logger.info("种子[{}]已被取消。",  seed.getSeedName() );
 		}
 	}
 
@@ -171,7 +204,7 @@ public class Launcher extends TimerTask implements Command {
 	@Override
 	public void pause() {
 		condition = false;
-		logger.info("种子[" + seed.getSeedName() + "]已停止运行。");
+		logger.info("种子[{}]已停止运行。",  seed.getSeedName() );
 	}
 
 	/**
@@ -208,11 +241,11 @@ public class Launcher extends TimerTask implements Command {
 			Pattern p = Pattern
 					.compile("\\" + DefaultConfig.fetch_list_url_left + "(.*)" + DefaultConfig.fetch_list_url_right);
 			Matcher m = p.matcher(fetchUrl);
+			List<String> list = Lists.newArrayList();
 			if (m.find()) {
 				int pagenum = Integer.valueOf(m.group(1));
 				String prefix = fetchUrl.substring(0, fetchUrl.indexOf(DefaultConfig.fetch_list_url_left));
 				String suffix = fetchUrl.substring(fetchUrl.indexOf(DefaultConfig.fetch_list_url_right) + 1);
-				List<String> list = Lists.newArrayList();
 				int totalPage = Integer.valueOf(totalPages);
 				for (int i = 0; i < totalPage; i++) {
 					int pn = pagenum + i;
@@ -220,10 +253,12 @@ public class Launcher extends TimerTask implements Command {
 					UrlQueue.newUnVisitedLink(seed.getSeedName(), newurl);
 					list.add(newurl);
 				}
-				Globals.LIST_URLS_CACHE.put(seed.getSeedName(), list);
+			} else {
+				UrlQueue.newUnVisitedLink(seed.getSeedName(), fetchUrl);
+				list.add(fetchUrl);
 			}
-			logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + seed.getSeedName() + "]列表Url总数是["
-					+ Globals.LIST_URLS_CACHE.size() + "]个。");
+			Globals.LIST_URLS_CACHE.put(seed.getSeedName(), list);
+			logger.info("线程[{}]抓取种子[{}]列表Url总数是[{}]个。",Thread.currentThread().getName() , seed.getSeedName(),Globals.LIST_URLS_CACHE.size() );
 		}
 	}
 
@@ -240,7 +275,9 @@ public class Launcher extends TimerTask implements Command {
 		UrlQueue.clearFailVisitedUrl(seedName);
 	}
 
-	// 设置资源同步
+	/**
+	 * 设置资源同步
+	 */
 	private void setSync() {
 		if (DefaultConfig.resource_synchronizer == null) {
 			return;
@@ -248,7 +285,7 @@ public class Launcher extends TimerTask implements Command {
 		if ((DefaultConfig.resource_synchronizer instanceof RsyncSyncer
 				|| DefaultConfig.resource_synchronizer instanceof ScpSyncer)
 				&& System.getProperty("os.name").toLowerCase().contains("windows")) {
-			logger.error("Rsync或Scp暂时不支持window系统，因此会强制关闭资源同步");
+			logger.error("Rsync或Scp暂时不支持window系统，因此会强制关闭资源同步。");
 			DefaultConfig.sync_open = false;
 			return;
 		} else if (DefaultConfig.resource_synchronizer instanceof ScpSyncer) {
@@ -260,4 +297,5 @@ public class Launcher extends TimerTask implements Command {
 		batch = Executors.newSingleThreadExecutor();
 		batch.execute(new BatchScheduler(DefaultConfig.resource_synchronizer));
 	}
+
 }

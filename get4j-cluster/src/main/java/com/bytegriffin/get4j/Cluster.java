@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.bytegriffin.get4j.annotation.Redis;
+import com.bytegriffin.get4j.annotation.Zookeeper;
 import com.bytegriffin.get4j.conf.ClusterNode;
 import com.bytegriffin.get4j.conf.ClusterNodeXmlHandler;
 import com.bytegriffin.get4j.conf.Configuration;
@@ -21,6 +22,11 @@ import com.bytegriffin.get4j.conf.ResourceSyncYamlHandler;
 import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.Initializer;
 import com.bytegriffin.get4j.core.SpiderEngine;
+import com.bytegriffin.get4j.core.WorkerStatusOpt;
+import com.bytegriffin.get4j.ha.ProbeMasterSelector;
+import com.bytegriffin.get4j.ha.ZookeeperClient;
+import com.bytegriffin.get4j.ha.ZookeeperOpt;
+import com.bytegriffin.get4j.probe.ProbeMasterChecker;
 import com.bytegriffin.get4j.store.RedisStorage;
 import com.bytegriffin.get4j.util.NetHelper;
 import com.google.common.base.Strings;
@@ -59,6 +65,7 @@ public class Cluster {
         	System.exit(1);
         }
         clusterNode.setInitializers(buildInitializers(clusterNode));
+        setZookeeperOpt(clusterNode);
         return clusterNode;
     }
 
@@ -75,7 +82,7 @@ public class Cluster {
     /**
      * 设置redis
      * @param mode ：部署模式：one(单机)/sharded(分片)/cluster(集群)
-     * @param address 地址格式：host1:port1|host2:port2
+     * @param address 地址格式：host1:port1,host2:port2
      * @param auth 密码，没有可设置null
      * @return
      */
@@ -87,6 +94,16 @@ public class Cluster {
     }
 
     /**
+     * 设置zookeeper
+     * @param address
+     * @return
+     */
+    public Cluster zookeeper(String address){
+    	clusterNode.setZookeeperAddress(address);
+    	return this;
+    }
+
+    /**
      * 根据Annotation设置redis
      * @param clazz
      * @return
@@ -94,7 +111,7 @@ public class Cluster {
     public Cluster redis(Class<?> clazz) {
         Annotation[] ans = clazz.getDeclaredAnnotations();
         if (ans == null || ans.length == 0) {
-            logger.error("类[" + clazz.getName() + "]没有配置任何Annotation。");
+            logger.error("类[{}]没有配置任何Annotation。", clazz.getName());
             System.exit(1);
         }
         for (Annotation an : ans) {
@@ -104,19 +121,54 @@ public class Cluster {
                 	Redis redis = (Redis) clazz.getAnnotation(Redis.class);
                     this.redis(redis.mode(),redis.address(),redis.auth());
                 }
-            } 
+            } else  if ("Zookeeper".equalsIgnoreCase(type)) {
+            	if (clazz.isAnnotationPresent(Zookeeper.class)) {
+            		Zookeeper zookeeper = (Zookeeper) clazz.getAnnotation(Zookeeper.class);
+                    this.zookeeper(zookeeper.value());
+                }
+            }
         }
         return this;
     }
-    
+
     /**
      * 构建初始化节点
      * @param node
      * @return
      */
     private static List<Initializer>  buildInitializers(ClusterNode node){
-    	RedisStorage redis = new RedisStorage(node);
-    	return Lists.newArrayList(redis);
+    	RedisStorage redis = null;
+    	if(!Strings.isNullOrEmpty(node.getRedisMode()) && !Strings.isNullOrEmpty(node.getRedisAddress()) && !Strings.isNullOrEmpty(node.getRedisAuth())){
+    		redis = new RedisStorage(node.getRedisMode(),node.getRedisAddress(),node.getRedisAuth());
+    	}
+    	ZookeeperClient zk = null;
+    	if(!Strings.isNullOrEmpty(node.getZookeeperAddress())){
+    		zk = new ZookeeperClient(node.getZookeeperAddress());
+    	}
+    	return Lists.newArrayList(redis, zk);
+    }
+
+    /**
+     * 构建zookeeper工作状态改变
+     * @return
+     */
+    private static WorkerStatusOpt buildWorkerStatusOpt(){
+    	return ZookeeperOpt.single();
+    }
+
+    /**
+     * 判断是否为probe master
+     * @return
+     */
+    private static ProbeMasterChecker buildProbeMasterChecker(){
+    	return ProbeMasterSelector.single();
+    }
+
+    private static void setZookeeperOpt(ClusterNode clusterNode){
+    	if(!Strings.isNullOrEmpty(clusterNode.getZookeeperAddress())){
+    		clusterNode.setWorkerStatusOpt(buildWorkerStatusOpt());
+    		clusterNode.setProbeMasterChecker(buildProbeMasterChecker());
+    	}
     }
 
     /**
@@ -140,6 +192,7 @@ public class Cluster {
 		context = new Context(new ClusterNodeXmlHandler());
 		ClusterNode clusterNode = context.load();
 		clusterNode.setInitializers(buildInitializers(clusterNode));
+		setZookeeperOpt(clusterNode);
 
 		SpiderEngine.create().setClusterNode(clusterNode).setSeeds(seeds).setResourceSync(synchronizer)
 				.setConfiguration(configuration).setDynamicFields(dynamicFields).build();

@@ -3,9 +3,12 @@ package com.bytegriffin.get4j.conf;
 import java.util.List;
 
 import com.bytegriffin.get4j.core.Initializer;
+import com.bytegriffin.get4j.core.WorkerStatusOpt;
+import com.bytegriffin.get4j.probe.ProbeMasterChecker;
 
 /**
  * cluster-node.xml全局配置文件
+ * 一个ClusterNode对应于一组Seed
  */
 public class ClusterNode {
 
@@ -13,7 +16,12 @@ public class ClusterNode {
     private String redisMode;
     private String redisAddress;
     private String redisAuth;
+    private String zookeeperAddress;
     private List<Initializer> initializers;
+    // 单个实例，但其方法支持多个不同的seed
+    private WorkerStatusOpt workerStatusOpt;
+    // 单个实例，但其方法支持多个不同的seed
+    private ProbeMasterChecker probeMasterChecker;
 
     public ClusterNode(){ 	
     }
@@ -54,6 +62,14 @@ public class ClusterNode {
 		this.redisAuth = redisAuth;
 	}
 
+	public String getZookeeperAddress() {
+		return zookeeperAddress;
+	}
+
+	public void setZookeeperAddress(String zookeeperAddress) {
+		this.zookeeperAddress = zookeeperAddress;
+	}
+
 	public List<Initializer> getInitializers() {
 		return initializers;
 	}
@@ -61,4 +77,21 @@ public class ClusterNode {
 	public void setInitializers(List<Initializer> initializers) {
 		this.initializers = initializers;
 	}
+
+	public WorkerStatusOpt getWorkerStatusOpt() {
+		return workerStatusOpt;
+	}
+
+	public void setWorkerStatusOpt(WorkerStatusOpt workerStatusOpt) {
+		this.workerStatusOpt = workerStatusOpt;
+	}
+
+	public ProbeMasterChecker getProbeMasterChecker() {
+		return probeMasterChecker;
+	}
+
+	public void setProbeMasterChecker(ProbeMasterChecker probeMasterChecker) {
+		this.probeMasterChecker = probeMasterChecker;
+	}
+
 }

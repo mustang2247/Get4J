@@ -51,9 +51,9 @@ public class PageChangeProber {
                 Strings.isNullOrEmpty(seed.getFetchProbeSleep()) ||
                 !StringUtil.isNumeric(seed.getFetchProbeSleep()) ||
                 Integer.valueOf(seed.getFetchProbeSleep()) <= 0) {
-            fetchProbeSleep = DefaultConfig.probe_sleep * 1000;
+            fetchProbeSleep = DefaultConfig.probe_sleep;
         } else {
-            fetchProbeSleep = Integer.valueOf(seed.getFetchProbeSleep()) * 1000;
+            fetchProbeSleep = Integer.valueOf(seed.getFetchProbeSleep());
         }
 
         // 2.创建probe文件夹

@@ -31,14 +31,14 @@ public final class FailUrlStorage extends Initializer{
 	/**
 	 * 负责爬虫爬取完成一次后将全部链接一次性地dump出来
 	 */
-	public static void dumpFile() {
+	public static void dump() {
 		Set<String> seedNameKeys = Globals.CHAIN_CACHE.keySet();
 		LinkedList<String> allFailUrls = Lists.newLinkedList();
 		for (String seedName : seedNameKeys) {
 			long count = UrlQueue.getFailVisitedUrlCount(seedName);
 			if(count > 0){
-				allFailUrls.addAll(UrlQueue.getFailVisitedUrl(seedName).getList());
-				logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + seedName + "]时一共有[" + count + "]个坏链产生。");
+				allFailUrls.addAll(UrlQueue.getFailVisitedUrl(seedName));
+				logger.info("线程[{}]抓取种子[{}]时一共有[{}]个坏链产生。", Thread.currentThread().getName() , seedName, count);
 			}
 		}
 		FileUtil.append(DefaultConfig.fail_url_file, allFailUrls);
@@ -47,7 +47,7 @@ public final class FailUrlStorage extends Initializer{
 			content += failUrl+" <br> ";
 		}
 		EmailSender.sendMail("此次爬取总共发现[" + allFailUrls.size() + "]个坏链。分别是：" + content);
-		logger.info("线程[" + Thread.currentThread().getName() + "]dump坏链完成。");
+		logger.info("线程[{}]dump坏链完成。", Thread.currentThread().getName() );
 	}
 
 }

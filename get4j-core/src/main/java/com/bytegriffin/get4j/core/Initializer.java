@@ -26,6 +26,9 @@ public abstract class Initializer {
 			return;
 		}
 		for(Initializer init : initializers){
+			if(init == null){
+				continue;
+			}
 			init.init();
 		}
 	}

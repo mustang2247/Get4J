@@ -8,7 +8,7 @@ import org.dom4j.Document;
 import org.dom4j.Element;
 
 /**
- * configuration.xml配置文件处理类
+ * cluster-node.xml配置文件处理类
  */
 public class ClusterNodeXmlHandler extends AbstractConfig {
 
@@ -22,6 +22,8 @@ public class ClusterNodeXmlHandler extends AbstractConfig {
     private static final String redis_mode = "redis.mode";
     private static final String redis_address = "redis.address";
     private static final String redis_auth = "redis.auth";
+
+    private static final String zookeeper_address = "zookeeper.address";
 
     /**
      * 加载configuration.xml配置文件内容到内存中
@@ -54,6 +56,8 @@ public class ClusterNodeXmlHandler extends AbstractConfig {
             	conf.setRedisAddress(value);
             } else if (name.equalsIgnoreCase(redis_auth)) {
             	conf.setRedisAuth(value);
+            } else if (name.equalsIgnoreCase(zookeeper_address)) {
+            	conf.setZookeeperAddress(value);
             }
         }
         return conf;

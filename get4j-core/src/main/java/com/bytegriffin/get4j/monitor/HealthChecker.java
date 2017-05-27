@@ -32,8 +32,13 @@ public class HealthChecker {
 		try {
 			HealthStatus healthStatus = new HealthStatus(seedName);
 			ObjectName objectName = new ObjectName(jmx_server_name + ":name=" + seedName);
-			server.registerMBean(healthStatus, objectName);
-			healthStatusMap.put(seedName, healthStatus);
+			if(!server.isRegistered(objectName) || healthStatusMap.get(seedName) == null){
+				server.registerMBean(healthStatus, objectName);
+				healthStatusMap.put(seedName, healthStatus);
+				logger.info("种子[{}]成功注册Jmx服务。",seedName);
+			} else {
+				logger.info("种子[{}]已经注册过Jmx服务，无需再次注册。",seedName);
+			}
 			// CounterMonitor monitor = new CounterMonitor();
 			// monitor.addObservedObject(objectName);
 			// monitor.setDifferenceMode(true);
@@ -41,7 +46,7 @@ public class HealthChecker {
 			// monitor.setObservedAttribute("unVisitUrlCount");
 			// monitor.start();
 		} catch (Exception e) {
-			logger.error("种子[" + seedName + "]注册health失败。", e);
+			logger.error("种子[{}]注册health失败。", seedName, e);
 		}
 	}
 

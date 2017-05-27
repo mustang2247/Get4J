@@ -162,8 +162,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
             com.gargoylesoftware.htmlunit.Page htmlpage = webClient.getPage(request);
             WebResponse response = htmlpage.getWebResponse();
 
-            int statusCode = response.getStatusCode();
-            boolean isvisit = isVisit(statusCode, page.getSeedName(), url, logger);
+            boolean isvisit = isVisit(null, page, null, response, logger);
             if (!isvisit) {
                 HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManagerShared(true);
                 Globals.HTTP_CLIENT_BUILDER_CACHE.put(page.getSeedName(), httpClientBuilder);
@@ -206,7 +205,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
             // page.setUrl(decodeUrl(page.getUrl(), page.getCharset()));
 
             // 记录站点防止频繁抓取的页面链接
-            frequentAccesslog(page.getSeedName(), url, content, logger);
+            //frequentAccesslog(page.getSeedName(), url, content, logger);
 
             // 设置page内容
             setContent(contentType, content, page);
@@ -236,8 +235,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
             com.gargoylesoftware.htmlunit.Page htmlpage = webClient.getPage(request);
             WebResponse response = htmlpage.getWebResponse();
 
-            int statusCode = response.getStatusCode();
-            boolean isvisit = isVisit(statusCode, page.getSeedName(), page.getUrl(), logger);
+            boolean isvisit = isVisit(null, page, null, response, logger);
             if (!isvisit) {
                 return null;
             }

@@ -1,5 +1,6 @@
 package com.bytegriffin.get4j.core;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -79,7 +80,7 @@ public final class UrlQueue {
 	 * @param seedName    String
 	 * @param links  HashSet<String>
 	 */
-	public static void addUnVisitedLinks(String seedName, HashSet<String> links) {
+	public synchronized static void addUnVisitedLinks(String seedName, HashSet<String> links) {
 		if (links == null || links.size() == 0) {
 			return;
 		}
@@ -96,11 +97,11 @@ public final class UrlQueue {
 				}
 			}
 		} else {
-			for (String link : links) {
-				if(!redis_queue.contains(visitedLinks_prefix + seedName, link)){
-					redis_queue.add(unVisitedLinks_prefix + seedName, link);
+				for (String link : links) {
+					if(!redis_queue.contains(visitedLinks_prefix + seedName, link)){
+						redis_queue.add(unVisitedLinks_prefix + seedName, link);
+					}
 				}
-			}
 		}
 	}
 
@@ -110,7 +111,7 @@ public final class UrlQueue {
 	 * @param seedName    String
 	 * @param link  String
 	 */
-	public static void newUnVisitedLink(String seedName, String link) {
+	public synchronized static void newUnVisitedLink(String seedName, String link) {
 		link = UrlAnalyzer.filterUrlPound(link);
 		Queue<String> queues = null;
 		if (isLocalQueue) {
@@ -141,6 +142,19 @@ public final class UrlQueue {
 			return redis_queue.outFirst(unVisitedLinks_prefix + seedName);
 		}
 	}
+	
+	/**
+	 * 获取头元素
+	 * @param seedName
+	 * @return
+	 */
+	public static String getFirst(String seedName) {
+		if (isLocalQueue) {
+			return UN_VISITED_LINKS.get(seedName).get(0);
+		} else {
+			return redis_queue.get(unVisitedLinks_prefix + seedName, 0);
+		}
+	}
 
 	/**
 	 * 判断未访问链接是否为空
@@ -169,9 +183,14 @@ public final class UrlQueue {
 				queues = new ConcurrentQueue<>();
 				UN_VISITED_RESOURCES.put(seedName, queues);
 			}
-			queues.add(resourceLink);
+			Queue<String> visitedResources = VISITED_RESOURCES.get(seedName);
+			if (visitedResources == null || !visitedResources.contains(resourceLink)) {
+				queues.add(resourceLink);
+			}
 		} else {
-			redis_queue.add(unVisitedResources_prefix + seedName, resourceLink);
+			if(!redis_queue.contains(visitedResources_prefix + seedName, resourceLink)){
+				redis_queue.add(unVisitedResources_prefix + seedName, resourceLink);
+			}
 		}
 	}
 
@@ -189,9 +208,14 @@ public final class UrlQueue {
 				queues = new ConcurrentQueue<>();
 				VISITED_LINKS.put(seedName, queues);
 			}
-			queues.add(link);
+			Queue<String> visitedLinks = VISITED_LINKS.get(seedName);
+			if (visitedLinks == null || !visitedLinks.contains(link)) {
+				queues.add(link);
+			}
 		} else {
-			redis_queue.add(visitedLinks_prefix + seedName, link);
+			if(!redis_queue.contains(visitedLinks_prefix + seedName, link)){
+				redis_queue.add(visitedLinks_prefix + seedName, link);
+			}
 		}
 	}
 
@@ -209,9 +233,14 @@ public final class UrlQueue {
 				queues = new ConcurrentQueue<>();
 				VISITED_RESOURCES.put(seedName, queues);
 			}
-			queues.add(resource);
+			Queue<String> visitedResources = VISITED_RESOURCES.get(seedName);
+			if (visitedResources == null || !visitedResources.contains(resource)) {
+				queues.add(resource);
+			}
 		} else {
-			redis_queue.add(visitedResources_prefix + seedName, resource);
+			if(!redis_queue.contains(visitedResources_prefix + seedName, resource)){
+				redis_queue.add(visitedResources_prefix + seedName, resource);
+			}
 		}
 	}
 
@@ -229,9 +258,14 @@ public final class UrlQueue {
 				queues = new ConcurrentQueue<>();
 				FAIL_VISITED_URLS.put(seedName, queues);
 			}
-			queues.add(failurl);
+			Queue<String> failVisitedUrls = FAIL_VISITED_URLS.get(seedName);
+			if (failVisitedUrls == null || !failVisitedUrls.contains(failurl)) {
+				queues.add(failurl);
+			}
 		} else {
-			redis_queue.add(failVisitedUrls_prefix + seedName, failurl);
+			if(!redis_queue.contains(failVisitedUrls_prefix + seedName, failurl)){
+				redis_queue.add(failVisitedUrls_prefix + seedName, failurl);
+			}
 		}
 	}
 
@@ -298,7 +332,7 @@ public final class UrlQueue {
 	 */
 	public static void clearFailVisitedUrl(String seedName) {
 		if (isLocalQueue) {
-			Queue<String> failVisitedUrl = getFailVisitedUrl(seedName);
+			Queue<String> failVisitedUrl = FAIL_VISITED_URLS.get(seedName);
 			if (failVisitedUrl != null && !failVisitedUrl.isEmpty()) {
 				failVisitedUrl.clear();
 			}
@@ -342,11 +376,11 @@ public final class UrlQueue {
 	 * @param seedName  String
 	 * @return ConcurrentQueue<String>
 	 */
-	public static Queue<String> getFailVisitedUrl(String seedName) {
+	public static Collection<String> getFailVisitedUrl(String seedName) {
 		if (isLocalQueue) {
-			return FAIL_VISITED_URLS.get(seedName);
+			return FAIL_VISITED_URLS.get(seedName).getAll();
 		} else {
-			return redis_queue.getQueue(failVisitedUrls_prefix + seedName);
+			return redis_queue.getAll(failVisitedUrls_prefix + seedName);
 		}
 	}
 

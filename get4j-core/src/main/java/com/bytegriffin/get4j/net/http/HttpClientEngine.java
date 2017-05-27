@@ -89,39 +89,29 @@ import com.bytegriffin.get4j.core.UrlQueue;
 public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 
     private static final Logger logger = LogManager.getLogger(HttpClientEngine.class);
-    /**
-     * 连接超时时间，单位毫秒
-     **/
+     // 连接超时时间，单位毫秒
     private final static int conn_timeout = 30000;
-    /**
-     * 获取数据的超时时间，单位毫秒。 如果访问一个接口，多少时间内无法返回数据，就直接放弃此次调用。
-     **/
+     // 获取数据的超时时间，单位毫秒。 如果访问一个接口，多少时间内无法返回数据，就直接放弃此次调用。
     private final static int soket_timeout = 30000;
-    /**
-     * 连接池中socket最大连接数上限
-     **/
+     // 连接池中socket最大连接数上限
     private final static int pool_total_conn = 400;
-    /**
-     * 连接池中每个线程最大连接数
-     **/
+     // 连接池中每个线程最大连接数
     private final static int per_route_conn = 20;
-    /**
-     * 最大重试次数
-     **/
+     // 最大重试次数
     private final static int max_retry_count = 5;
-    /**
-     * 链接管理器，提取成属性是主要是用于关闭闲置链接
-     **/
+     // 链接管理器，提取成属性是主要是用于关闭闲置链接
     private static PoolingHttpClientConnectionManager connManager;
+    // 是否开启自动重定向功能
+    // 注意：HttpClient是默认开启跳转功能的，但是遇到一些链接会报错：http://tousu.baidu.com/news/add
+    private final static boolean auto_redirect = true;
 
     @Override
     public void init(Seed seed) {
         // 1.初始化HttpClientBuilder
         initHttpClientBuilder(seed.getSeedName());
-
+        
         // 2.初始化配置参数
         initParams(seed, logger);
-
         logger.info("Seed[" + seed.getSeedName() + "]的Http引擎HttpClientEngine的初始化完成。");
     }
 
@@ -209,14 +199,14 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             httpget.setConfig(config);
             HttpResponse response = httpclient.execute(httpget);
             if (HttpStatus.SC_OK == response.getStatusLine().getStatusCode()) {
-                logger.info("Http代理[" + httpProxy.toString() + "]测试成功。");
+                logger.info("Http代理[{}]测试成功。", httpProxy.toString() );
                 return true;
             } else {
-                logger.info("Http代理[" + httpProxy.toString() + "]测试失败。");
+                logger.info("Http代理[{}]测试失败。", httpProxy.toString());
                 return false;
             }
         } catch (Exception e) {
-            logger.error("Http代理[" + httpProxy.toString() + "]测试出错，请重新检查。");
+            logger.error("Http代理[{}]测试出错，请重新检查。", httpProxy.toString());
             return false;
         } finally {
             if (httpget != null) {
@@ -232,8 +222,9 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         if (connManager != null) {
             // 关闭失效连接
             connManager.closeExpiredConnections();
-            // 关闭空闲超过30秒的连接
-            connManager.closeIdleConnections(30, TimeUnit.SECONDS);
+            // 关闭空闲超过10秒的连接
+            connManager.closeIdleConnections(10, TimeUnit.SECONDS);
+            logger.info("线程[{}]使用HttpClientEngine连接管理器清空失效连接和过长连接。", Thread.currentThread().getName());
         }
     }
 
@@ -244,7 +235,6 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         // Use custom message parser / writer to customize the way HTTP
         // messages are parsed from and written out to the data stream.
         HttpMessageParserFactory<HttpResponse> responseParserFactory = new DefaultHttpResponseParserFactory() {
-
             @Override
             public HttpMessageParser<HttpResponse> create(SessionInputBuffer buffer, MessageConstraints constraints) {
                 LineParser lineParser = new BasicLineParser() {
@@ -257,18 +247,15 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                             return new BasicHeader(buffer.toString(), null);
                         }
                     }
-
                 };
                 return new DefaultHttpResponseParser(buffer, lineParser, DefaultHttpResponseFactory.INSTANCE,
                         constraints) {
-
                     @Override
                     protected boolean reject(final CharArrayBuffer line, int count) {
                         // try to ignore all garbage preceding a status line
                         // infinitely
                         return false;
                     }
-
                 };
             }
 
@@ -303,7 +290,6 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 
         // Use custom DNS resolver to override the system DNS resolution.
         // DnsResolver dnsResolver = new SystemDefaultDnsResolver() {
-        //
         // @Override
         // public InetAddress[] resolve(final String host) {
         // try{
@@ -317,7 +303,6 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         // }
         // return null;
         // }
-        //
         // };
 
         DnsResolver dnsResolver = new SystemDefaultDnsResolver();
@@ -365,8 +350,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 .setRelativeRedirectsAllowed(true).setSocketTimeout(soket_timeout).setConnectTimeout(conn_timeout)
                 .setCircularRedirectsAllowed(true).setConnectionRequestTimeout(conn_timeout)
                 .setExpectContinueEnabled(true)
-                //HttpClient是默认开启跳转功能的，但是遇到一些链接会报错：http://tousu.baidu.com/news/add
-                .setRedirectsEnabled(false)
+                .setRedirectsEnabled(auto_redirect)
                 .setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM, AuthSchemes.DIGEST))
                 .setProxyPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC)).build();
 
@@ -510,14 +494,13 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             request.addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
             request.addHeader("Host", page.getHost());
             HttpResponse response = httpClient.execute(request);
-            int statusCode = response.getStatusLine().getStatusCode();
-            boolean isvisit = isVisit(statusCode, page.getSeedName(), url, logger);
+            boolean isvisit = isVisit(httpClient, page, request, response, logger);
             if (!isvisit) {
                 return page;
             }
             HttpEntity entity = response.getEntity();
             if (entity == null) {
-                logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容为空。");
+                logger.warn("线程[{}]访问种子[{}]的url[{}]内容为空。",Thread.currentThread().getName(),  page.getSeedName() , page.getUrl() );
             }
             // 设置Response Cookie
             Header header = response.getLastHeader("Set-Cookie");
@@ -529,7 +512,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 ctHeader = entity.getContentType();
             } catch (NullPointerException e) {
                 UrlQueue.newFailVisitedUrl(page.getSeedName(), url);
-                logger.error("线程[" + Thread.currentThread().getName() + "]获取种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]页面内容为空。", e);
+                logger.error("线程[{}]获取种子[{}]url[{}]页面内容为空。",Thread.currentThread().getName(),  page.getSeedName() , page.getUrl(), e);
                 return page;
             }
             if (ctHeader != null) {
@@ -546,7 +529,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 
                 if (Strings.isNullOrEmpty(content)) {
                     UrlQueue.newFailVisitedUrl(page.getSeedName(), url);
-                    logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容为空。");
+                    logger.warn("线程[{}]获取种子[{}]url[{}]页面内容为空。",Thread.currentThread().getName(),  page.getSeedName() , page.getUrl());
                     return page;
                 }
 
@@ -567,7 +550,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 //	page.setUrl(decodeUrl(page.getUrl(), page.getCharset()));
 
                 // 记录站点防止频繁抓取的页面链接
-                frequentAccesslog(page.getSeedName(), url, content, logger);
+                //frequentAccesslog(page.getSeedName(), url, content, logger);
 
                 // 设置page内容
                 setContent(contentType, content, page);
@@ -575,7 +558,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 
         } catch (Exception e) {
             UrlQueue.newUnVisitedLink(page.getSeedName(), url);
-            logger.error("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容失败。", e);
+            logger.error("线程[{}]获取种子[{}]url[{}]页面内容失败。",Thread.currentThread().getName(),  page.getSeedName() , page.getUrl(), e);
             EmailSender.sendMail(e);
             ExceptionCatcher.addException(page.getSeedName(), e);
             if (request != null) {
@@ -606,7 +589,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         String fileName = FileUtil.generateResourceName(url, "");
         fileName = Globals.DOWNLOAD_DIR_CACHE.get(seedName) + fileName;
         if(FileUtil.isExistsDiskFile(fileName, contentLength)){
-        	logger.warn("线程[" + Thread.currentThread().getName() + "]下载种子[" + seedName + "]的大文件[" + url + "]时发现磁盘上已经存在此文件["+fileName+"]。");
+        	logger.warn("线程[{}]下载种子[{}]的大文件[{}]时发现磁盘上已经存在此文件[{}]。",Thread.currentThread().getName(),  seedName, url, fileName);
         	return true;
         }
         FileUtil.makeDiskFile(fileName, contentLength);
@@ -621,9 +604,9 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             HttpResponse response = httpClient.execute(request);
             FileUtil.writeFile(fileName, contentLength, response.getEntity().getContent());
             String log = DateUtil.getCostDate(start);
-            logger.info("线程[" + Thread.currentThread().getName() + "]下载大小为[" + contentLength / (1024 * 1024) + "]MB的文件[" + fileName + "]总共花费时间为[" + log + "]。");
+            logger.info("线程[{}]下载大小为[{}]MB的文件[{}]总共花费时间为[{}]。",Thread.currentThread().getName() ,contentLength / (1024 * 1024),fileName, log);
         } catch (Exception e) {
-            logger.error("线程[" + Thread.currentThread().getName() + "]下载种子[" + seedName + "]的大文件[" + url + "]时失败。", e);
+            logger.error("线程[{}]下载种子[{}]的大文件[{}]时失败。", Thread.currentThread().getName() ,seedName, url, e);
             EmailSender.sendMail(e);
             ExceptionCatcher.addException(seedName, e);
             if (request != null) {
@@ -667,14 +650,13 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         CloseableHttpClient httpClient = Globals.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
         for (String url : resources) {
             HttpGet request = null;
-
             try {
                 request = new HttpGet(url);
                 //request.setHeader("http.protocol.handle-redirects","false");
                 HttpResponse response = httpClient.execute(request);
                 int statusCode = response.getStatusLine().getStatusCode();
 
-                boolean isvisit = isVisit(statusCode, page.getSeedName(), url , logger);
+                boolean isvisit = isVisit(httpClient, page, request, response, logger);
                 if (!isvisit) {
                     continue;
                 }
@@ -684,16 +666,17 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                     Header responseHeader = response.getFirstHeader("Location");
                     if (responseHeader != null && !Strings.isNullOrEmpty(responseHeader.getValue())) {
                         request.releaseConnection();
+                        request = new HttpGet(url);
                         url = responseHeader.getValue();
-                        response = httpClient.execute(new HttpGet(url));
-                        logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]时跳转到新的url[" + url + "]上。");
+                        page.setUrl(url);
+                        response = httpClient.execute(request);
+                        logger.warn("线程[{}]访问种子[{}]的url[{}]时跳转到新的url[{}]上。",Thread.currentThread().getName() ,page.getSeedName() , page.getUrl(), url);
                     }
                 }
                 HttpEntity entity = response.getEntity();
                 if (entity == null) {
                     EntityUtils.consume(entity);
-                    logger.warn("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url["
-                            + page.getUrl() + "]资源内容为空。");
+                    logger.warn("线程[{}]下载种子[{}]的url[{}]资源内容为空。",Thread.currentThread().getName() , page.getSeedName(), page.getUrl());
                     return;
                 }
 
@@ -748,8 +731,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 FileUtil.writeFileToDisk(resourceName, content);
             } catch (Exception e) {
                 UrlQueue.newFailVisitedUrl(page.getSeedName(), url);
-                logger.error("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url[" + url
-                        + "]资源失败。", e);
+                logger.error("线程[{}]下载种子[{}]的url[{}]资源失败。", Thread.currentThread().getName(), page.getSeedName() ,url, e);
                 EmailSender.sendMail(e);
                 ExceptionCatcher.addException(page.getSeedName(), e);
                 if (request != null) {
@@ -780,30 +762,14 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         try {
             request = new HttpGet(url);
             HttpResponse response = httpClient.execute(request);
-            int statusCode = response.getStatusLine().getStatusCode();
-            boolean isvisit = isVisit(statusCode, page.getSeedName(),url, logger);
+            boolean isvisit = isVisit(httpClient, page, request, response, logger);
             if (!isvisit) {
                 return;
-            }
-            // 301/302/303/307 获取真实地址
-            if (HttpStatus.SC_MOVED_PERMANENTLY == statusCode || HttpStatus.SC_MOVED_TEMPORARILY == statusCode
-                    || HttpStatus.SC_SEE_OTHER == statusCode || HttpStatus.SC_TEMPORARY_REDIRECT == statusCode) {
-                Header responseHeader = response.getFirstHeader("Location");
-                if (responseHeader != null) {
-                    if (!Strings.isNullOrEmpty(responseHeader.getValue())) {
-                        request.releaseConnection();
-                        url = responseHeader.getValue();
-                        request = new HttpGet(url);
-                        response = httpClient.execute(request);
-                        logger.warn("线程[" + Thread.currentThread().getName() + "]访问种子[" + page.getSeedName() + "]的url["
-                                + page.getUrl() + "]时跳转到新的url[" + url + "]上。");
-                    }
-                }
             }
             HttpEntity entity = response.getEntity();
             if (entity == null) {
                 EntityUtils.consume(entity);
-                logger.warn("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]资源内容为空。");
+                logger.warn("线程[{}]下载种子[{}]的url[{}]资源内容为空。",Thread.currentThread().getName() ,page.getSeedName() , page.getUrl());
                 return;
             }
             long contentlength = entity.getContentLength();
@@ -858,8 +824,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             page.setAvatar(resourceName);
         } catch (Exception e) {
             UrlQueue.newFailVisitedUrl(page.getSeedName(), url);
-            logger.error("线程[" + Thread.currentThread().getName() + "]下载种子[" + page.getSeedName() + "]的url[" + url
-                    + "]资源失败。", e);
+            logger.error("线程[{}]下载种子[{}]的url[{}]资源失败。",Thread.currentThread().getName() , page.getSeedName(), url, e);
             EmailSender.sendMail(e);
             ExceptionCatcher.addException(page.getSeedName(), e);
             if (request != null) {
@@ -883,26 +848,25 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             request = new HttpGet(page.getUrl());
             request.addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
             HttpResponse response = httpClient.execute(request);
-            int statusCode = response.getStatusLine().getStatusCode();
-            boolean isvisit = isVisit(statusCode, page.getSeedName(),page.getUrl(), logger);
+            boolean isvisit = isVisit(httpClient, page, request, response, logger);
             if (!isvisit) {
                 return null;
             }
             HttpEntity entity = response.getEntity();
             if (entity == null) {
-                logger.warn("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容为空。");
+                logger.warn("线程[{}]探测种子[{}]的url[{}]内容为空。",Thread.currentThread().getName() ,page.getSeedName() , page.getUrl());
             }
             Header ctHeader = null;
             try {
                 ctHeader = entity.getContentType();
             } catch (NullPointerException e) {
-                logger.error("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]页面内容为空。", e);
+                logger.error("线程[{}]探测种子[{}]url[{}]页面内容为空。",Thread.currentThread().getName() ,page.getSeedName() , page.getUrl(), e);
                 return null;
             }
             if (ctHeader != null) {
                 long contentlength = entity.getContentLength();
                 if (contentlength >= big_file_max_size) {
-                    logger.warn("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]页面内容太大。");
+                    logger.warn("线程[{}]探测种子[{}]url[{}]页面内容太大。",Thread.currentThread().getName() ,page.getSeedName() , page.getUrl());
                 }
                 String contentType = ctHeader.getValue();
 
@@ -911,7 +875,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 String content = new String(bytes);
 
                 if (Strings.isNullOrEmpty(content)) {
-                    logger.warn("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容为空。");
+                    logger.warn("线程[{}]探测种子[{}]的url[{}]内容为空。",Thread.currentThread().getName() ,page.getSeedName() , page.getUrl());
                     return null;
                 }
 
@@ -924,9 +888,8 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 // 设置page内容
                 return content;
             }
-
         } catch (Exception e) {
-            logger.error("线程[" + Thread.currentThread().getName() + "]探测种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]内容失败。", e);
+            logger.error("线程[{}]探测种子[{}]的url[{}]内容失败。",Thread.currentThread().getName() ,page.getSeedName() , page.getUrl(), e);
             EmailSender.sendMail(e);
             ExceptionCatcher.addException(page.getSeedName(), e);
             if (request != null) {
