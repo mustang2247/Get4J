@@ -1,6 +1,5 @@
 package com.bytegriffin.get4j.sample;
 
-
 import com.bytegriffin.get4j.Spider;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.parse.PageParser;

@@ -374,9 +374,8 @@ public abstract class AbstractHttpEngine {
 				|| HttpStatus.SC_INTERNAL_SERVER_ERROR == statusCode
 				|| HttpStatus.SC_SERVICE_UNAVAILABLE == statusCode) {
 			UrlQueue.newFailVisitedUrl(page.getSeedName(), page.getUrl());
-			Preconditions.checkArgument(false, "线程[{}]访问种子[{}]的url[{}]请求发送[{}]错误。", Thread.currentThread().getName(),
-					seedName, statusCode);
-			logger.error("线程[{}]访问种子[{}]的url[{}]请求发送[{}]错误。", Thread.currentThread().getName(), seedName, statusCode);
+			Preconditions.checkArgument(false, "线程["+Thread.currentThread().getName()+"]访问种子["+seedName+"]的url["+page.getUrl()+"]请求发送["+statusCode+"]错误。");
+			logger.error("线程[{}]访问种子[{}]的url[{}]请求发送[{}]错误。", Thread.currentThread().getName(), seedName, page.getUrl(),statusCode);
 			return false;
 		} else if (HttpStatus.SC_MOVED_PERMANENTLY == statusCode || HttpStatus.SC_MOVED_TEMPORARILY == statusCode
 				|| HttpStatus.SC_SEE_OTHER == statusCode || HttpStatus.SC_TEMPORARY_REDIRECT == statusCode) {

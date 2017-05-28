@@ -165,7 +165,6 @@ public class FetchResourceSelector {
      * @param urlPrefix   url前缀字符串
      * @return HashSet<String>
      */
-    @SuppressWarnings("unchecked")
     public static HashSet<String> jsonPath(String jsonContent, String jsonPath, String urlPrefix) {
         if (urlPrefix == null) {
             urlPrefix = "";
@@ -173,10 +172,10 @@ public class FetchResourceSelector {
         HashSet<String> links = new HashSet<>();
         Object obj = JsonPath.read(jsonContent, jsonPath);
         if (obj instanceof List) {
-            List<String> list = (List<String>) obj;
+            List<?> list = (List<?>) obj;//可能是任何类型
             if (list.size() > 0) {
-                for (String link : list) {
-                    links.add(urlPrefix + link);
+                for (Object link : list) {
+                    links.add(urlPrefix + link+"");
                 }
             }
         } else if (obj instanceof String) {

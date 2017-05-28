@@ -160,10 +160,11 @@ public class Page {
      * @return Object
      */
     public Object json(String jsonPath) {
-        if (!this.isHtmlContent() && !this.isXmlContent()) {
+        if (Strings.isNullOrEmpty(jsonPath) || Strings.isNullOrEmpty(this.jsonContent) 
+        		|| this.isHtmlContent() || this.isXmlContent()) {
             return null;
         }
-        return JsonPath.read(jsonContent, jsonPath);
+        return JsonPath.read(this.jsonContent, jsonPath);
     }
 
     /**
