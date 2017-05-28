@@ -28,6 +28,8 @@ import com.bytegriffin.get4j.util.Sleep;
  * Zookeeper客户端：自动感知各节点的运行状况 <br>
  * 一旦发现某节点有状态变化，比如开始运行了新的抓取任务，<br>
  * 它就会唤醒其他节点共同来完成此任务<br/>
+ * 1.Interval定时器模式：只需要集群中一个节点配置定时器即可。<br/>
+ * 2.Probe模式：需要每个节点都要配置probe。<br/>
  */
 public class ZookeeperClient extends Initializer{
 
