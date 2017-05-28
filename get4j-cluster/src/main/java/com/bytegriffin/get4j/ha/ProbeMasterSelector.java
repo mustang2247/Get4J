@@ -14,11 +14,13 @@ import com.bytegriffin.get4j.util.NetHelper;
 import com.bytegriffin.get4j.util.Sleep;
 
 /**
- * ProbeMaster选举策略：<br>
- * 当在Probe模式下抓取同一个seed时，集群中只允许出现一个Probe，<br>
- * 最先启动的Probe机器来充当Master，一旦Probe Master退出或宕机，<br>
- * 程序将自动在当前同一个seed集群中选举新的Probe充当Master。<br>
- * 注意：集群模式下需要每个节点配置probe选项。
+ * ProbeMaster选举策略：采用Active-Standby模式<br>
+ * 当在Probe模式下抓取同一个seed时，集群中只允许出现一个节点是Probe Master(Active)，<br>
+ * 其他Probe节点处于Standby。最先启动的Probe机器来充当Master，<br>
+ * 一旦Probe Master退出或宕机，程序将自动在当前同一个seed集群<br>
+ * 中选举新的Probe充当Master。注意：集群模式下需要每个节点配置probe选项。<br>
+ * Interval：集群中只需一个节点配置即可。<br>
+ * Probe：集群中所有机器都要配置。
  */
 public final class ProbeMasterSelector  extends LeaderSelectorListenerAdapter implements ProbeMasterChecker {
 
