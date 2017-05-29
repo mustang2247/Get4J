@@ -4,6 +4,9 @@ import com.bytegriffin.get4j.Spider;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.parse.PageParser;
 
+/**
+ * 猫眼电影
+ */
 public class MaoyanPageParser implements PageParser {
 
 	@Override

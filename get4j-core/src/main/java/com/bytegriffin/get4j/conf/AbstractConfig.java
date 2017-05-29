@@ -38,6 +38,7 @@ public abstract class AbstractConfig {
     protected static final String woker_thread_count = "worker.thread.count";
     protected static final String fetch_page_mode = "fetch.page.mode";
     protected static final String fetch_url = "fetch.url";
+    protected static final String fetch_http_method = "fetch.http.method";
     protected static final String fetch_probe_selector = "fetch.probe.selector";
     protected static final String fetch_probe_sleep = "fetch.probe.sleep";
     protected static final String fetch_detail_selector = "fetch.detail.selector";

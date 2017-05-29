@@ -14,6 +14,8 @@ public @interface Site {
     int thread() default 1;
 
     String url();//没有default值必须要设置
+    
+    String method() default "get";
 
     String probeSelector() default "";
 

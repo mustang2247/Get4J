@@ -30,6 +30,13 @@
             </description>
         </property>
         <property>
+            <name>fetch.http.method</name>
+            <value></value>
+            <description>
+                非必填项。抓取时Http的请求方法，默认值是get，可以配置为post，暂且只支持这两种。
+            </description>
+        </property>
+        <property>
             <name>fetch.probe.selector</name>
             <value></value>
             <description>

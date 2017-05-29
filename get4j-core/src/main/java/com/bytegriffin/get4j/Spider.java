@@ -105,6 +105,18 @@ public class Spider {
         seed.setFetchUrl(fetchUrl);
         return this;
     }
+    
+    /**
+     * http请求方法<br>
+     * 非必填项。抓取时Http的请求方法，默认值是get，可以配置为post，暂且只支持这两种。
+     * 
+     * @param method
+     * @return
+     */
+    public Spider method(String method) {
+    	seed.setFetchHttpMethod(method);
+    	return this;
+    }
 
     /**
      * 设置页面变化探测器，用于探测抓取页面的变化，如果有变化就立刻抓取，没有变化则继续探测。
@@ -565,10 +577,10 @@ public class Spider {
      * 设置rsync为资源同步方式 <br>
      * 注意：暂时不支持windows
      *
-     * @param host        服务器地址
-     * @param username    用户名
-     * @param isModule    是否为module模式，是为true，不是则代表远程目录为false
-     * @param moduleOrDir module模式或者远程dir目录，如果是module模式，密码需
+     * @param host                 服务器地址
+     * @param username       用户名
+     * @param isModule         是否为module模式，是为true，不是则代表远程目录为false
+     * @param moduleOrDir  module模式或者远程dir目录，如果是module模式，密码需
      *                    要在服务器端配置；如果是远程dir，需要ssh-keygen配置无密码登陆
      * @return Spider
      */
@@ -655,6 +667,7 @@ public class Spider {
                     ListDetail seed = (ListDetail) clazz.getAnnotation(ListDetail.class);
                     this.pageMode(PageMode.list_detail);
                     this.fetchUrl(seed.url());
+                    this.method(seed.method());
                     this.probe(seed.probeSelector(), seed.probeSleep());
                     this.detailSelector(seed.detailSelector());
                     this.totalPages(seed.totolPages());
@@ -681,6 +694,7 @@ public class Spider {
                     Site seed = (Site) clazz.getAnnotation(Site.class);
                     this.pageMode(PageMode.site);
                     this.fetchUrl(seed.url());
+                    this.method(seed.method());
                     this.probe(seed.probeSelector(), seed.probeSleep());
                     this.thread(seed.thread());
                     this.timer(seed.startTime(), seed.interval());
@@ -706,6 +720,7 @@ public class Spider {
                     Single seed = (Single) clazz.getAnnotation(Single.class);
                     this.pageMode(PageMode.single);
                     this.fetchUrl(seed.url());
+                    this.method(seed.method());
                     this.probe(seed.probeSelector(), seed.probeSleep());
                     this.thread(seed.thread());
                     this.timer(seed.startTime(), seed.interval());
@@ -730,6 +745,7 @@ public class Spider {
                     Cascade seed = (Cascade) clazz.getAnnotation(Cascade.class);
                     this.pageMode(PageMode.cascade);
                     this.fetchUrl(seed.url());
+                    this.method(seed.method());
                     this.probe(seed.probeSelector(), seed.probeSleep());
                     this.thread(seed.thread());
                     this.timer(seed.startTime(), seed.interval());

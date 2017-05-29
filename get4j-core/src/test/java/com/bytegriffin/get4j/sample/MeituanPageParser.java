@@ -5,9 +5,9 @@ import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.parse.PageParser;
 
 /**
- * 安居客 - 楼盘
+ * 美团
  */
-public class AnjukePageParser  implements PageParser {
+public class MeituanPageParser implements PageParser {
 
     @Override
     public void parse(Page page) {
@@ -15,9 +15,8 @@ public class AnjukePageParser  implements PageParser {
     }
 
     public static void main(String[] args) throws Exception {
-        Spider.list_detail().fetchUrl("http://bj.fang.anjuke.com/loupan/all/p{1}/").detailSelector("a.items-name[href]")
-                .parser(AnjukePageParser.class)
-                .thread(1).start();
+        Spider.list_detail().fetchUrl("http://bj.meituan.com/category/all/all/page{1}").defaultUserAgent()
+        			.detailSelector("a.lazy-img[href]").parser(MeituanPageParser.class).thread(1).start();
     }
 
 }

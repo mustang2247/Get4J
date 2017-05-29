@@ -5,9 +5,9 @@ import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.parse.PageParser;
 
 /**
- * 安居客 - 楼盘
+ * 亚马逊销售排行榜
  */
-public class AnjukePageParser  implements PageParser {
+public class AmazonPageParser implements PageParser {
 
     @Override
     public void parse(Page page) {
@@ -15,7 +15,8 @@ public class AnjukePageParser  implements PageParser {
     }
 
     public static void main(String[] args) throws Exception {
-        Spider.list_detail().fetchUrl("http://bj.fang.anjuke.com/loupan/all/p{1}/").detailSelector("a.items-name[href]")
+        Spider.list_detail().fetchUrl("https://www.amazon.cn/gp/bestsellers/books/ref=zg_bs_books_pg_1?ie=UTF8&pg={1}")
+        		.detailSelector("div.a-fixed-left-grid-col.a-col-right > a.a-link-normal[href]")
                 .parser(AnjukePageParser.class)
                 .thread(1).start();
     }

@@ -53,6 +53,14 @@ public class Page {
      */
     private String url;
     /**
+     * Http请求方法
+     */
+    private String method = "get";
+    /**
+     * post请求参数
+     */
+    private Map<String, String> params;
+    /**
      * 页面编码
      */
     private String charset;
@@ -92,6 +100,17 @@ public class Page {
     public Page(String seedName, String url) {
         this.seedName = seedName;
         this.url = url;
+    }
+    
+    /**
+     * 是否是get方法
+     * @return
+     */
+    public boolean isGet(){
+    	if("get".equalsIgnoreCase(this.method)){
+    		return true;
+    	}
+    	return false;
     }
 
     /**
@@ -164,7 +183,13 @@ public class Page {
         		|| this.isHtmlContent() || this.isXmlContent()) {
             return null;
         }
-        return JsonPath.read(this.jsonContent, jsonPath);
+        try{
+        	Object obj =  JsonPath.read(this.jsonContent, jsonPath);
+        	return obj;
+        }catch(com.jayway.jsonpath.PathNotFoundException e){
+        	return null;
+        }
+        
     }
 
     /**
@@ -174,7 +199,10 @@ public class Page {
      * @return String
      */
     public String jsoupText(String jsoupSelect) {
-        Document doc = Jsoup.parse(this.jsonContent);
+    	if(Strings.isNullOrEmpty(this.htmlContent)){
+    		return null;
+    	}
+        Document doc = Jsoup.parse(this.htmlContent);
         Elements eles = doc.select(jsoupSelect);
         return eles.text();
     }
@@ -186,6 +214,9 @@ public class Page {
      * @return Elements
      */
     public Elements jsoup(String jsoupSelect) {
+    	if(Strings.isNullOrEmpty(this.htmlContent)){
+    		return null;
+    	}
         Document doc = Jsoup.parse(this.htmlContent);
         return doc.select(jsoupSelect);
     }
@@ -209,6 +240,9 @@ public class Page {
      * @return List<String>
      */
     public List<String> jsoupXml(String jsoupSelect) {
+    	if(Strings.isNullOrEmpty(this.xmlContent)){
+    		return null;
+    	}
         return FetchResourceSelector.xmlSelect2List(this.xmlContent, jsoupSelect);
     }
 
@@ -439,5 +473,21 @@ public class Page {
     public void setCharset(String charset) {
         this.charset = charset;
     }
+
+	public String getMethod() {
+		return method;
+	}
+
+	public void setMethod(String method) {
+		this.method = method;
+	}
+
+	public Map<String, String> getParams() {
+		return params;
+	}
+
+	public void setParams(Map<String, String> params) {
+		this.params = params;
+	}
 
 }

@@ -39,6 +39,10 @@ public class Seed {
      */
     private String fetchUrl;
     /**
+     * 非必填项。抓取时Http的请求方法，默认值是get，可以配置为post，暂且只支持这两种
+     */
+    private String fetchHttpMethod;
+    /**
      * 页面变化探测器， 非必填项。用于探测抓取页面的变化，如果有变化就立刻抓取，没有变化则继续探测。默认不填或没配置此项就是不启动探测，
      * 而默认值default表示探测整个页面变化，而填写内容格式支持Jsoup（针对html或xml）或者Jsonpath（针对json）文件。
      */
@@ -454,5 +458,13 @@ public class Seed {
     public void setStoreMongodb(String storeMongodb) {
         this.storeMongodb = storeMongodb;
     }
+
+	public String getFetchHttpMethod() {
+		return fetchHttpMethod;
+	}
+
+	public void setFetchHttpMethod(String fetchHttpMethod) {
+		this.fetchHttpMethod = fetchHttpMethod;
+	}
 
 }

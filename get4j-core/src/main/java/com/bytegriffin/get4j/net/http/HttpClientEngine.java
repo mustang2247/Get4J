@@ -2,11 +2,14 @@ package com.bytegriffin.get4j.net.http;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
 import java.nio.charset.CodingErrorAction;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
@@ -27,13 +30,17 @@ import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.GzipDecompressingEntity;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.config.ConnectionConfig;
 import org.apache.http.config.MessageConstraints;
@@ -79,12 +86,11 @@ import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
+import com.bytegriffin.get4j.core.UrlQueue;
 import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.FileUtil;
-
 import com.google.common.base.Strings;
-import com.bytegriffin.get4j.core.UrlQueue;
 
 public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 
@@ -349,7 +355,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         RequestConfig defaultRequestConfig = RequestConfig.custom().setCookieSpec(CookieSpecs.DEFAULT)
                 .setRelativeRedirectsAllowed(true).setSocketTimeout(soket_timeout).setConnectTimeout(conn_timeout)
                 .setCircularRedirectsAllowed(true).setConnectionRequestTimeout(conn_timeout)
-                .setExpectContinueEnabled(true)
+                .setExpectContinueEnabled(true).setMaxRedirects(100)
                 .setRedirectsEnabled(auto_redirect)
                 .setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM, AuthSchemes.DIGEST))
                 .setProxyPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC)).build();
@@ -469,20 +475,37 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             Globals.HTTP_CLIENT_BUILDER_CACHE.get(seedName).setUserAgent(userAgent);
         }
     }
+    
+    private HttpRequestBase getRquest(Page page){
+    	HttpRequestBase request = null;
+    	HttpPost request2 = null;
+    	if(page.isGet()){
+        	request = new HttpGet(page.getUrl());
+        } else {
+        	request2 = new HttpPost(page.getUrl());
+        	
+        	try {
+        		List<NameValuePair> nvps = new ArrayList<NameValuePair>();  
+				request2.setEntity(new UrlEncodedFormEntity(nvps));
+			} catch (UnsupportedEncodingException e) {
+				logger.error("线程[{}]设置种子[{}]url[{}]请求方式时出错。",Thread.currentThread().getName(),  page.getSeedName() , page.getUrl(), e);
+			}
+        	request = request2;
+        }
+    	return request;
+    }
 
     /**
      * 获取并设置page的页面内容（包含Html、Json）
-     * 注意：
-     * 1.有的站点链接是Post操作，只需在浏览器中找到真实link，保证参数完整，Get也可以获取。
-     * 2.有些网站会检查header中的Referer是否合法
-     *
+     * 注意：有些网站会检查header中的Referer是否合法
+     * 
      * @param page page
      * @return Page
      */
     public Page getPageContent(Page page) {
         CloseableHttpClient httpClient;
         String url = page.getUrl();
-        HttpGet request = null;
+        HttpRequestBase request = null;
         try {
             sleep(page.getSeedName(), logger);
             setHttpProxy(page.getSeedName());
@@ -490,7 +513,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             // 生成site url
             setHost(page, logger);
             httpClient = Globals.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
-            request = new HttpGet(url);
+            request = getRquest(page);
             request.addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
             request.addHeader("Host", page.getHost());
             HttpResponse response = httpClient.execute(request);
@@ -562,11 +585,11 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             EmailSender.sendMail(e);
             ExceptionCatcher.addException(page.getSeedName(), e);
             if (request != null) {
-                request.abort();
+            	request.abort();
             }
         } finally {
             if (request != null) {
-                request.releaseConnection();
+            	request.releaseConnection();
             }
         }
         return page;
@@ -649,7 +672,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         setRedirectFalse(page.getSeedName());
         CloseableHttpClient httpClient = Globals.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
         for (String url : resources) {
-            HttpGet request = null;
+        	HttpRequestBase request = null;
             try {
                 request = new HttpGet(url);
                 //request.setHeader("http.protocol.handle-redirects","false");
@@ -758,7 +781,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         setUserAgent(page.getSeedName());
         setRedirectFalse(page.getSeedName());
         CloseableHttpClient httpClient = Globals.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
-        HttpGet request = null;
+        HttpRequestBase request = null;
         try {
             request = new HttpGet(url);
             HttpResponse response = httpClient.execute(request);
@@ -840,12 +863,12 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
     @Override
     public String probePageContent(Page page) {
         CloseableHttpClient httpClient;
-        HttpGet request = null;
+        HttpRequestBase request = null;
         try {
             setHttpProxy(page.getSeedName());
             setUserAgent(page.getSeedName());
             httpClient = Globals.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
-            request = new HttpGet(page.getUrl());
+            request = getRquest(page);
             request.addHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
             HttpResponse response = httpClient.execute(request);
             boolean isvisit = isVisit(httpClient, page, request, response, logger);

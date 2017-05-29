@@ -528,9 +528,16 @@ public final class UrlAnalyzer {
      *
      * @param isResource 是否是资源文件，当isResource=true时，此urls存放的是资源的url，否则为普通链接url
      */
-    private HashSet<String> sniffUrlFromJson(boolean isResource) {
+	private HashSet<String> sniffUrlFromJson(boolean isResource) {
         HashSet<String> urls = Sets.newHashSet();
-        JSONObject jsonObj = JSONObject.parseObject(page.getJsonContent());
+        JSONObject jsonObj = null;
+        try{
+        	jsonObj = JSONObject.parseObject(page.getJsonContent());
+        }catch(ClassCastException e){
+        	JSONArray array = JSONArray.parseArray(page.getJsonContent());
+        	String obj = "{ 'root':"+array.toJSONString()+"}";
+        	jsonObj = JSONArray.parseObject(obj);
+        }
         HashSet<String> sets = Sets.newHashSet();
         sets = travelJson(jsonObj, sets);
         for (String url : sets) {
@@ -563,9 +570,9 @@ public final class UrlAnalyzer {
                 Iterator<?> it = ((JSONArray) obj).iterator();
                 while (it.hasNext()) {
                 	Object object = it.next();
-                	if(object instanceof JSONArray){
+                	if(object instanceof JSONArray || object instanceof String){
                 		 break;
-                	}
+                	} 
                     JSONObject jsonObject = (JSONObject) object;
                     travelJson(jsonObject, url);
                 }
