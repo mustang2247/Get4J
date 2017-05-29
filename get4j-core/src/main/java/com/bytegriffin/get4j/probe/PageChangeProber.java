@@ -44,7 +44,7 @@ public class PageChangeProber {
 
     public void init(Seed seed) {
         // 1.设置page对象
-        page = new Page(seed.getSeedName(), UrlAnalyzer.formatListDetailUrl(seed.getFetchUrl()));
+        page = new Page(seed.getSeedName(), UrlAnalyzer.formatListDetailUrl(seed.getFetchUrl()), seed.getFetchHttpMethod());
         fetchProbeSelector = seed.getFetchProbeSelector();
         
         if (DefaultConfig.default_value.equalsIgnoreCase(seed.getFetchProbeSleep()) ||

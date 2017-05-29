@@ -16,7 +16,7 @@ public class WangyiPageParser implements PageParser {
 
     public static void main(String[] args) throws Exception {
         Spider.cascade().fetchUrl("http://www.163.com").parser(WangyiPageParser.class)
-                .thread(1).start();
+                .defaultUserAgent().thread(1).start();
     }
 
 }

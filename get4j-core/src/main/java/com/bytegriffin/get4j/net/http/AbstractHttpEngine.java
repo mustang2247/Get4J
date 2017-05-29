@@ -283,9 +283,7 @@ public abstract class AbstractHttpEngine {
 	 */
 	String getCharset(String contentType, String content) {
 		String charset = "";
-		if (contentType.contains("charset=")) {// 如果Response的Header中有
-												// Content-Type:text/html;
-												// charset=utf-8直接获取
+		if (contentType.contains("charset=")) {// 如果Response的Header中有 Content-Type:text/html;charset=utf-8直接获取
 			charset = contentType.split("charset=")[1];
 		} else {// 但是有时Response的Header中只有 Content-Type:text/html;没有charset
 			if (isXmlPage(contentType, content)) { // 首先判断是不是xml文件

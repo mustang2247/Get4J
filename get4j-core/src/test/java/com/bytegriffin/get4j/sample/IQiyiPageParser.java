@@ -4,6 +4,9 @@ import com.bytegriffin.get4j.Spider;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.parse.PageParser;
 
+/**
+ * 爱奇异
+ */
 public class IQiyiPageParser  implements PageParser {
 
     @Override

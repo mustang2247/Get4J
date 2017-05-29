@@ -2,7 +2,6 @@ package com.bytegriffin.get4j.fetch;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
@@ -50,8 +49,7 @@ public class ListDetailFetcher implements Process {
     @Override
     public void execute(Page page) {
 
-        List<String> listurls = Globals.LIST_URLS_CACHE.get(page.getSeedName());
-        if (listurls.contains(page.getUrl())) {// 访问的是list url
+        if (UrlAnalyzer.isAcessListUrl(page)) {
             // 1.获取并设置列表页Page的Content属性
             page = http.getPageContent(page);
 
@@ -111,6 +109,7 @@ public class ListDetailFetcher implements Process {
             page.setSeedName(detailPage.getSeedName());
             page.setHost(detailPage.getHost());
             page.setUrl(detailPage.getUrl());
+            page.setMethod(detailPage.getMethod());
 
             logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]完成。");
         }

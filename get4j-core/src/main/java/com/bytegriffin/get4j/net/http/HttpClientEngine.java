@@ -2,14 +2,11 @@ package com.bytegriffin.get4j.net.http;
 
 import java.io.IOException;
 import java.io.InterruptedIOException;
-import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
 import java.nio.charset.CodingErrorAction;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
@@ -30,14 +27,12 @@ import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
 import org.apache.http.ParseException;
 import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.GzipDecompressingEntity;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -82,6 +77,7 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.bytegriffin.get4j.conf.DefaultConfig;
 import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.core.Globals;
@@ -479,18 +475,17 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
     private HttpRequestBase getRquest(Page page){
     	HttpRequestBase request = null;
     	HttpPost request2 = null;
-    	if(page.isGet()){
-        	request = new HttpGet(page.getUrl());
-        } else {
-        	request2 = new HttpPost(page.getUrl());
-        	
-        	try {
-        		List<NameValuePair> nvps = new ArrayList<NameValuePair>();  
-				request2.setEntity(new UrlEncodedFormEntity(nvps));
-			} catch (UnsupportedEncodingException e) {
-				logger.error("线程[{}]设置种子[{}]url[{}]请求方式时出错。",Thread.currentThread().getName(),  page.getSeedName() , page.getUrl(), e);
-			}
+    	if(page.isPost()){
+    		request2 = new HttpPost(page.getUrl());
+//        	try { //如果httpclient可以解析url中的参数，那么既可以省略以下代码
+//        		List<NameValuePair> nvps = new ArrayList<NameValuePair>();  
+//				request2.setEntity(new UrlEncodedFormEntity(nvps));
+//			} catch (UnsupportedEncodingException e) {
+//				logger.error("线程[{}]设置种子[{}]url[{}]请求方式时出错。",Thread.currentThread().getName(),  page.getSeedName() , page.getUrl(), e);
+//			}
         	request = request2;
+        } else {
+        	request = new HttpGet(page.getUrl());
         }
     	return request;
     }
@@ -545,7 +540,12 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                     return page;
                 }
                 String contentType = ctHeader.getValue();
-
+                String detailSelector = Globals.FETCH_DETAIL_SELECT_CACHE.get(page.getSeedName());
+                // 如果页面内容是json字符串，并且json属性内容是html内容
+                if(!Strings.isNullOrEmpty(detailSelector)  && UrlAnalyzer.isAcessListUrl(page) && detailSelector.contains(DefaultConfig.json_path_prefix)){
+                	contentType = "application/json;charset=utf-8";
+                }
+                
                 // 转换内容字节
                 byte[] bytes = EntityUtils.toByteArray(entity);
                 String content = new String(bytes);

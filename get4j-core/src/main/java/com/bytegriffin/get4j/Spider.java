@@ -109,11 +109,13 @@ public class Spider {
     /**
      * http请求方法<br>
      * 非必填项。抓取时Http的请求方法，默认值是get，可以配置为post，暂且只支持这两种。
-     * 
-     * @param method
      * @return
      */
-    public Spider method(String method) {
+    public Spider post() {
+    	return method("post");
+    }
+
+    private Spider method(String method) {
     	seed.setFetchHttpMethod(method);
     	return this;
     }

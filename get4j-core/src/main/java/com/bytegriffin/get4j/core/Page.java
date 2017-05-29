@@ -102,12 +102,18 @@ public class Page {
         this.url = url;
     }
     
+    public Page(String seedName, String url, String method) {
+        this.seedName = seedName;
+        this.url = url;
+        this.method = method;
+    }
+    
     /**
-     * 是否是get方法
+     * 是否是post方法
      * @return
      */
-    public boolean isGet(){
-    	if("get".equalsIgnoreCase(this.method)){
+    public boolean isPost(){
+    	if("post".equalsIgnoreCase(this.method)){
     		return true;
     	}
     	return false;

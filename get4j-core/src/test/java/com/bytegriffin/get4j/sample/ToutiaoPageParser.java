@@ -16,7 +16,7 @@ public class ToutiaoPageParser implements PageParser {
 
     public static void main(String[] args) throws Exception {
         Spider.list_detail().fetchUrl("http://toutiao.com/search_content/?offset=20&format=json&keyword=工作&autoload=true&count=20&cur_tab=1")
-        .detailSelector("$.data[*].display_url")
+        .detailSelector("$.data[*].display_url").defaultUserAgent()
         	.parser(ToutiaoPageParser.class).thread(1).start();
     }
 

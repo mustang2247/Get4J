@@ -17,10 +17,12 @@ public class Worker implements Runnable {
     private static final Logger logger = LogManager.getLogger(Worker.class);
 
     private String seedName;
+    private String method;
     private CountDownLatch latch;
 
-    public Worker(String seedName, CountDownLatch latch) {
+    public Worker(String seedName, String method, CountDownLatch latch) {
         this.seedName = seedName;
+        this.method = method;
         this.latch = latch;
     }
 
@@ -37,7 +39,7 @@ public class Worker implements Runnable {
             if (Strings.isNullOrEmpty(url)) {
                 break;
             }
-            chain.execute(new Page(seedName, url));
+            chain.execute(new Page(seedName, url, method));
             UrlQueue.newVisitedLink(seedName, url);
         }
         logger.info("线程[{}]完成任务[{}]。。。",Thread.currentThread().getName(), seedName);

@@ -33,6 +33,7 @@ import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.core.UrlQueue;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
 import com.bytegriffin.get4j.send.EmailSender;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -311,13 +312,22 @@ public final class UrlAnalyzer {
         } else if (page.isJsonContent()) { // json格式：通过jsonpath来获取detail链接
             if (detailSelect.startsWith(DefaultConfig.json_path_prefix)) {// json字符串里的detail页面提供的是绝对路径
                 if (detailSelect.contains(DefaultConfig.fetch_detail_json_html_split)) { // 特殊情况：当Json属性中包含Html，并且Html中存在Detail Link时，之间用逗号隔开，所以需要jsonpath和jsoup两个解析
-                    List<String> contents = FetchResourceSelector.jsonPath2List(page.getJsonContent(), detailSelect, "");
+                	List<String> list = Splitter.on(DefaultConfig.fetch_detail_json_html_split).trimResults().omitEmptyStrings().splitToList(detailSelect);
+                	String jsonSelector = null;
+                	if(list.size() > 0){
+                		jsonSelector = list.get(0);
+                	}
+                	String htmlSelector =  "";
+                	if(list.size() > 1){
+                		htmlSelector = list.get(1);
+                	}
+                    List<String> contents = FetchResourceSelector.jsonPath2List(page.getJsonContent(), jsonSelector, "");
                     for (String field : contents) {
                         if (field == null) {
                             continue;
                         }
                         Document doc = Jsoup.parse(field, page.getUrl());
-                        Elements eles = doc.select(detailSelect);
+                        Elements eles = doc.select(htmlSelector);
                         HashSet<String> href = getAllUrlByElement(eles);// a标签
                         // 过滤<a>标签中的资源
                         urls.addAll(href);
@@ -751,6 +761,20 @@ public final class UrlAnalyzer {
     		return filterUrlPound(newurl);
     	}
     	return url;
+    }
+    
+    /**
+     * 在List_Detail模式下，当前访问的是否为list url <br>
+     * true：是；false：不是
+     * @param page
+     * @return
+     */
+    public static boolean isAcessListUrl(Page page){
+    	List<String> listurls = Globals.LIST_URLS_CACHE.get(page.getSeedName());
+        if (listurls.contains(page.getUrl())) {
+        	return true;
+        }
+        return false;
     }
 
 }

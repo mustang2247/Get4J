@@ -12,7 +12,7 @@ public class SohuPageParser implements PageParser {
     }
 
     public static void main(String[] args) throws Exception {
-        Spider.cascade().fetchUrl("http://www.sohu.com/").parser(SohuPageParser.class)
+        Spider.cascade().fetchUrl("http://www.sohu.com/").parser(SohuPageParser.class).defaultUserAgent()
                 .thread(1).start();
     }
 

@@ -103,13 +103,13 @@ public class Launcher extends TimerTask implements Command {
 		if (threadNum <= 1) {
 			latch = new CountDownLatch(1);
 			executorService = Executors.newSingleThreadExecutor();
-			Worker worker = new Worker(seed.getSeedName(), latch);
+			Worker worker = new Worker(seed.getSeedName(),seed.getFetchHttpMethod(), latch);
 			executorService.execute(worker);
 		} else {
 			executorService = Executors.newFixedThreadPool(threadNum);
 			latch = new CountDownLatch(threadNum);
 			for (int i = 0; i < threadNum; i++) {
-				Worker worker = new Worker(seed.getSeedName(), latch);
+				Worker worker = new Worker(seed.getSeedName(), seed.getFetchHttpMethod(), latch);
 				executorService.execute(worker);
 				Sleep.seconds(3);
 			}
@@ -222,7 +222,7 @@ public class Launcher extends TimerTask implements Command {
 			String totalPages = seed.getFetchTotalPages();
 			if (!Strings.isNullOrEmpty(totalPages) && !StringUtil.isNumeric(totalPages)) {
 				Page page = Globals.HTTP_ENGINE_CACHE.get(seed.getSeedName())
-						.getPageContent(new Page(seed.getSeedName(), UrlAnalyzer.formatListDetailUrl(fetchUrl)));
+						.getPageContent(new Page(seed.getSeedName(), UrlAnalyzer.formatListDetailUrl(fetchUrl), seed.getFetchHttpMethod()));
 				if (totalPages.contains(DefaultConfig.json_path_prefix)) {// json格式
 					int totalPage = JsonPath.read(page.getJsonContent(), totalPages);// Json会自动转换类型
 					totalPages = String.valueOf(totalPage);// 所以需要再次转换

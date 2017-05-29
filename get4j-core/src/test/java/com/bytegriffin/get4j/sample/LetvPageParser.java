@@ -5,9 +5,9 @@ import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.parse.PageParser;
 
 /**
- * 开源中国社区
+ * 乐视-最新电影
  */
-public class OschinaPageParser  implements PageParser {
+public class LetvPageParser   implements PageParser {
 
     @Override
     public void parse(Page page) {
@@ -15,8 +15,9 @@ public class OschinaPageParser  implements PageParser {
     }
 
     public static void main(String[] args) throws Exception {
-        Spider.list_detail().fetchUrl("http://www.oschina.net/action/ajax/get_more_news_list?newsType=project&p={1}").defaultUserAgent()
-        				.detailSelector("a.title[href]").parser(OschinaPageParser.class).thread(1).start();
+        Spider.list_detail().fetchUrl("http://rec.letv.com/pcw?action=more&pageid=page_cms1003337280&fragid=8168&num=10")
+        		.detailSelector("http://www.le.com/ptv/vplay/$.rec[0].videos[*].vid")
+                .parser(LetvPageParser.class).thread(1).start();
     }
 
 }

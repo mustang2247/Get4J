@@ -4,6 +4,9 @@ import com.bytegriffin.get4j.Spider;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.parse.PageParser;
 
+/**
+ * 当当网
+ */
 public class DangdangPageParser  implements PageParser {
 
     @Override
