@@ -58,6 +58,7 @@
             <value></value>
             <description>
                 非必填项，详情页面链接选择器，当抓取模式fetch.mode设置为list_detail时使用，支持Jsoup原生的选择器（html或xml内容）或jsonpath（json内容）。
+                当此列表页内容为html，详情页的格式是json时，并且页面中只包含了详情页的相对路径，此时这个值格式为：(链接前缀)uri，例如：(http://url_prefix)url_suffix
                 当此内容为JsonPath字符串的时候，如果list页面的json中提供的detail的链接是相对路径，那么此时这个值的格式为：链接前缀+jsonpath，
                 例如：http://www.aaa.com/bbb$.data.url；当此属性为空时，说明抓取的页面只包含列表页面，不存在详情页面。注意：如果Json属性中包含的是Html，
                 并且Html里包含着DetailLink的时候，这时候需要先写Jsonpath再写Jsoup选择器字符串，中间用竖杠隔开，例如： $.data.*|a.class[href]

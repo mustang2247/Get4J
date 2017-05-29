@@ -113,9 +113,17 @@ public class DefaultConfig {
 
     /**
      * 当fetch.detail.selector选择Json属性中内容是Html，并且Html中包含detail Link时，
-     * 这种特殊情况需要先写Jsonpath再写Jsoup选择器字符串，中间用竖杠隔开，例如： $.data.*|a.class[href]
+     * 这种特殊情况需要配置时先写Jsonpath再写Jsoup选择器字符串，中间用竖杠隔开，例如： $.data.*|a.class[href]
      */
     public static final String fetch_detail_json_html_split = "|";
+
+    /**
+     * 当fetch.detail.selector选择html的detail Link是json链接，这种特殊情况需要配置时先写
+     * 再用Jsonpath选择器字符串，不采用中间用符号隔开，因为selector和url中本来就有很多标识符 
+     * 但是可以采用左右小括号来显示着不混乱。例如： (http//jsonurl/)a.class[href]
+     */
+    public static final String fetch_detail_json_prefix = "(";
+    public static final String fetch_detail_json_suffix = ")";
 
     /**
      * 是否将下载后的文件保留其url前缀 <br>

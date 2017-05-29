@@ -184,7 +184,7 @@ public final class UrlAnalyzer {
      * 一是出现url的情况不多，二是不好判断哪个属于相对路径，只能判断出绝对路径来
      *
      * @param doc  Document
-     * @param urls HashSet<String>
+     * @param urls HashSet
      */
     private void addOptionUrl(Document doc, HashSet<String> urls) {
         Elements opteles = doc.select("option[value]");// select_option
@@ -203,7 +203,7 @@ public final class UrlAnalyzer {
      * 如果该url是一个资源文件（图片、js、css等）的话，那么将其保存到resource中。 <br/>
      * 如果该url就是普通链接的话，返回并将其加载到内存中
      *
-     * @return HashSet<String>
+     * @return HashSet
      */
     public final HashSet<String> sniffAllLinks() {
         HashSet<String> urls = Sets.newHashSet();
@@ -238,7 +238,7 @@ public final class UrlAnalyzer {
      * 如果该url是一个资源文件（图片、js、css等）的话，那么将其保存到resource中。 <br/>
      * 如果该url就是普通链接的话，返回并将其加载到内存中
      *
-     * @return HashSet<String>
+     * @return HashSet
      */
     public final HashSet<String> sniffSiteLinks() {
         HashSet<String> urls = Sets.newHashSet();
@@ -290,7 +290,7 @@ public final class UrlAnalyzer {
      * 如果该url是一个资源文件（图片、js、css等）的话，那么将其保存到resource中。 <br/>
      * 如果该url就是普通链接的话，返回并将其加载到内存中
      *
-     * @return HashSet<String>
+     * @return HashSet
      */
     public final HashSet<String> sniffDetailLinks() {
         String detailSelect = Globals.FETCH_DETAIL_SELECT_CACHE.get(page.getSeedName());
@@ -304,11 +304,28 @@ public final class UrlAnalyzer {
             if (Strings.isNullOrEmpty(content)) {
                 return null;
             }
-            Document doc = Jsoup.parse(content, siteUrl);
-            Elements eles = doc.select(detailSelect);// a标签
-            HashSet<String> href = getAllUrlByElement(eles);// a标签
-            // 过滤<a>标签中的资源
-            urls.addAll(href);
+
+            if (detailSelect.startsWith(DefaultConfig.fetch_detail_json_prefix)) { 
+            	List<String> list = Splitter.on(DefaultConfig.fetch_detail_json_suffix).trimResults().omitEmptyStrings().splitToList(detailSelect);
+            	String jsonUrl = null;
+            	if(list.size() > 0){
+            		jsonUrl = list.get(0).replace(DefaultConfig.fetch_detail_json_prefix, "");
+            	}
+            	String htmlSelector =  "";
+            	if(list.size() > 1){
+            		htmlSelector = list.get(1);
+            	}
+            	HashSet<String>  hashset = FetchResourceSelector.xmlSelect(content, htmlSelector);
+            	for(String id : hashset){
+            		urls.add(jsonUrl + id);
+            	}
+            } else {
+            	Document doc = Jsoup.parse(content, siteUrl);
+            	Elements eles = doc.select(detailSelect);// a标签
+            	HashSet<String> href = getAllUrlByElement(eles);// a标签
+                urls.addAll(href); // 过滤<a>标签中的资源
+            }
+            
         } else if (page.isJsonContent()) { // json格式：通过jsonpath来获取detail链接
             if (detailSelect.startsWith(DefaultConfig.json_path_prefix)) {// json字符串里的detail页面提供的是绝对路径
                 if (detailSelect.contains(DefaultConfig.fetch_detail_json_html_split)) { // 特殊情况：当Json属性中包含Html，并且Html中存在Detail Link时，之间用逗号隔开，所以需要jsonpath和jsoup两个解析

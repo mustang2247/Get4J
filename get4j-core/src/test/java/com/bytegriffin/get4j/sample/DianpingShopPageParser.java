@@ -11,13 +11,23 @@ public class DianpingShopPageParser implements PageParser {
 
     @Override
     public void parse(Page page) {
-        System.err.println(page.getTitle() + "   " + page.getCharset() + "  " + page.getUrl() + "  ");
+    	Object obj = page.json("$.msg.shopInfo.shopName");
+    	if(obj != null){
+    		String shopName = obj.toString();
+    		String address = page.json("$.msg.shopInfo.shopName").toString();
+    		String phoneNo = page.json("$.msg.shopInfo.phoneNo").toString();
+    		System.err.println( "商铺名称：" + shopName+ "  商铺地址：" + address + "  联系电话："+phoneNo);
+    	}
     }
 
+    /**
+     * html列表页中包含的json详情页所需id
+     * @param args
+     * @throws Exception
+     */
     public static void main(String[] args) throws Exception {
         Spider.list_detail().fetchUrl("http://www.dianping.com/search/category/2/10/p{1}").parser(DianpingShopPageParser.class)
-                .detailSelector("div.pic>a[href]").defaultUserAgent().defaultProxy()
-                .thread(1).start();
+                .detailSelector("(http://www.dianping.com/ajax/json/shopfood/wizard/BasicHideInfoAjaxFP?shopId=)a.o-favor.J_o-favor[data-fav-referid]").defaultUserAgent().thread(1).start();
 
     }
 
