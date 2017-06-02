@@ -7,6 +7,7 @@ import java.nio.charset.CodingErrorAction;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
@@ -83,10 +84,12 @@ import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.core.UrlQueue;
+import com.bytegriffin.get4j.download.DownloadFile;
 import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.DateUtil;
 import com.bytegriffin.get4j.util.FileUtil;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 
 public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 
@@ -444,7 +447,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
      *
      * @param seedName seedName
      */
-    private static void setHttpProxy(String seedName) {
+    protected static void setHttpProxy(String seedName) {
         HttpProxySelector hpl = Globals.HTTP_PROXY_CACHE.get(seedName);
         if (hpl == null) {
             return;
@@ -461,7 +464,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
     /**
      * 设置User_Agent
      */
-    private static void setUserAgent(String seedName) {
+    protected static void setUserAgent(String seedName) {
         UserAgentSelector ual = Globals.USER_AGENT_CACHE.get(seedName);
         if (ual == null) {
             return;
@@ -535,7 +538,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             }
             if (ctHeader != null) {
                 long contentlength = entity.getContentLength();
-                boolean isdone = downloadBigFile(page.getSeedName(), page.getUrl(), contentlength);
+                boolean isdone = cacheBigFile(page.getSeedName(), page.getUrl(), contentlength);
                 if (isdone) {
                     return page;
                 }
@@ -594,23 +597,39 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         }
         return page;
     }
+    
+    /**
+     * 事先将大文件缓存起来
+     * @param seedName
+     * @param url
+     * @param contentLength
+     * @return
+     */
+    public static boolean cacheBigFile(String seedName, String url , long contentLength){
+    	if (contentLength <= big_file_max_size) {//10M
+            return false;
+        }
+    	DownloadFile dfile = new DownloadFile();
+    	dfile.setUrl(url);
+    	dfile.setSeedName(seedName);
+    	dfile.setContentLength(contentLength);
+    	DownloadFile.add(seedName, dfile);
+    	return true;
+    }
 
     /**
      * 下载大文件，默认设置超过10M大小的文件算是大文件
-     * 文件太大会抛异常，所以特此添加一个下载打文件的方法
+     * 文件太大会抛异常，所以特此添加一个下载大文件的方法
      *
      * @param seedName        String
-     * @param url                       String
+     * @param url                        String
      * @param contentlength contentLength
      * @return boolean
      */
-    static boolean downloadBigFile(String seedName, String url, long contentLength) {
-        if (contentLength <= big_file_max_size) {//10M
-            return false;
-        }
+    public static boolean downloadBigFile(String seedName, String url, long contentLength) {
         String start = DateUtil.getCurrentDate();
         String fileName = FileUtil.generateResourceName(url, "");
-        fileName = Globals.DOWNLOAD_DIR_CACHE.get(seedName) + fileName;
+        fileName = Globals.DOWNLOAD_DISK_DIR_CACHE.get(seedName) + fileName;
         if(FileUtil.isExistsDiskFile(fileName, contentLength)){
         	logger.warn("线程[{}]下载种子[{}]的大文件[{}]时发现磁盘上已经存在此文件[{}]。",Thread.currentThread().getName(),  seedName, url, fileName);
         	return true;
@@ -625,7 +644,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
             request = new HttpGet(url);
             //request.addHeader("Range", "bytes=" + offset + "-" + (this.offset + this.length - 1));//断点续传的话需要设置Range属性，当然前提是服务器支持
             HttpResponse response = httpClient.execute(request);
-            FileUtil.writeFile(fileName, contentLength, response.getEntity().getContent());
+            FileUtil.writeBigFileToDisk(fileName, contentLength, response.getEntity().getContent());
             String log = DateUtil.getCostDate(start);
             logger.info("线程[{}]下载大小为[{}]MB的文件[{}]总共花费时间为[{}]。",Thread.currentThread().getName() ,contentLength / (1024 * 1024),fileName, log);
         } catch (Exception e) {
@@ -656,14 +675,12 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
 
     /**
      * 下载网页中的资源文件（JS/CSS/JPG等）<br>
-     * 不管HttpEngine是不是HttpClient，都默认使用它下载资源文件，因为当HttpEngine是HtmlUnit时下载速度极其慢。<br>
      *
      * @param page
      */
-    public static void downloadResources(Page page) {
-        // 判断是否有资源文件，
+    public static List<DownloadFile> downloadResources(Page page,String folderName) {
         if (page.getResources() == null || page.getResources().size() == 0) {
-            return;
+            return null;
         }
         HashSet<String> resources = page.getResources();
         sleep(page.getSeedName(), logger);
@@ -671,55 +688,46 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
         setUserAgent(page.getSeedName());
         setRedirectFalse(page.getSeedName());
         CloseableHttpClient httpClient = Globals.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
+        List<DownloadFile> list = Lists.newArrayList();
         for (String url : resources) {
         	HttpRequestBase request = null;
             try {
                 request = new HttpGet(url);
                 //request.setHeader("http.protocol.handle-redirects","false");
                 HttpResponse response = httpClient.execute(request);
-                int statusCode = response.getStatusLine().getStatusCode();
 
                 boolean isvisit = isVisit(httpClient, page, request, response, logger);
                 if (!isvisit) {
                     continue;
                 }
-                // 301/302/303/307 获取真实地址
-                if (HttpStatus.SC_MOVED_PERMANENTLY == statusCode || HttpStatus.SC_MOVED_TEMPORARILY == statusCode
-                        || HttpStatus.SC_SEE_OTHER == statusCode || HttpStatus.SC_TEMPORARY_REDIRECT == statusCode) {
-                    Header responseHeader = response.getFirstHeader("Location");
-                    if (responseHeader != null && !Strings.isNullOrEmpty(responseHeader.getValue())) {
-                        request.releaseConnection();
-                        request = new HttpGet(url);
-                        url = responseHeader.getValue();
-                        page.setUrl(url);
-                        response = httpClient.execute(request);
-                        logger.warn("线程[{}]访问种子[{}]的url[{}]时跳转到新的url[{}]上。",Thread.currentThread().getName() ,page.getSeedName() , page.getUrl(), url);
-                    }
-                }
+
                 HttpEntity entity = response.getEntity();
                 if (entity == null) {
                     EntityUtils.consume(entity);
                     logger.warn("线程[{}]下载种子[{}]的url[{}]资源内容为空。",Thread.currentThread().getName() , page.getSeedName(), page.getUrl());
-                    return;
+                    continue;
                 }
 
                 long contentlength = entity.getContentLength();
-                boolean isdone = downloadBigFile(page.getSeedName(), url, contentlength);
+                boolean isdone = cacheBigFile(page.getSeedName(), url, contentlength);
                 if (isdone) {
-                    return;
+                    continue;
                 }
 
                 byte[] content = EntityUtils.toByteArray(entity);
-                String resourceName = Globals.DOWNLOAD_DIR_CACHE.get(page.getSeedName());
+                DownloadFile dfile = new DownloadFile();
+                dfile.setContent(content);
                 Header header = entity.getContentType();
                 if (header == null) {
                     continue;
                 }
                 String contentType = header.getValue();
                 String suffix = "";
+                String resourceName = "";
                 if (Strings.isNullOrEmpty(contentType)) {
-                    resourceName += FileUtil.generateResourceName(url, suffix);
-                    FileUtil.writeFileToDisk(resourceName, content);
+                    resourceName = folderName + FileUtil.generateResourceName(url, suffix);
+                    dfile.setFileName(resourceName);
+                    list.add(dfile);
                     continue;
                 } else {
                     if (isJsonPage(contentType) || isHtmlPage(contentType) || isXmlPage(contentType, new String(content))) {
@@ -750,8 +758,9 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                         }
                     }
                 }
-                resourceName += FileUtil.generateResourceName(url, suffix);
-                FileUtil.writeFileToDisk(resourceName, content);
+                resourceName = folderName + FileUtil.generateResourceName(url, suffix);
+                dfile.setFileName(resourceName);
+                list.add(dfile);
             } catch (Exception e) {
                 UrlQueue.newFailVisitedUrl(page.getSeedName(), url);
                 logger.error("线程[{}]下载种子[{}]的url[{}]资源失败。", Thread.currentThread().getName(), page.getSeedName() ,url, e);
@@ -766,55 +775,61 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 }
             }
         }
+        return list;
     }
 
     /**
      * 下载avatar资源文件<br>
-     * 不管HttpEngine是不是HttpClient，都默认使用它下载资源文件，因为当HttpEngine是HtmlUnit时下载速度极其慢。<br>
      *
      * @param page
      */
-    public static void downloadAvatar(Page page) {
+    public static  DownloadFile downloadAvatar(Page page, String folderName) {
         String url = page.getAvatar();
+        if (Strings.isNullOrEmpty(url)) {
+            return null;
+        }
         sleep(page.getSeedName(), logger);
         setHttpProxy(page.getSeedName());
         setUserAgent(page.getSeedName());
         setRedirectFalse(page.getSeedName());
         CloseableHttpClient httpClient = Globals.HTTP_CLIENT_BUILDER_CACHE.get(page.getSeedName()).build();
         HttpRequestBase request = null;
+        DownloadFile file = null;
         try {
             request = new HttpGet(url);
             HttpResponse response = httpClient.execute(request);
             boolean isvisit = isVisit(httpClient, page, request, response, logger);
             if (!isvisit) {
-                return;
+                return null;
             }
             HttpEntity entity = response.getEntity();
             if (entity == null) {
                 EntityUtils.consume(entity);
                 logger.warn("线程[{}]下载种子[{}]的url[{}]资源内容为空。",Thread.currentThread().getName() ,page.getSeedName() , page.getUrl());
-                return;
+                return null;
             }
             long contentlength = entity.getContentLength();
-            boolean isdone = downloadBigFile(page.getSeedName(), url, contentlength);
+            boolean isdone = cacheBigFile(page.getSeedName(), url, contentlength);
             if (isdone) {
-                return;
+                return null;
             }
             byte[] content = EntityUtils.toByteArray(entity);
+            file = new DownloadFile();
+            file.setContent(content);
             Header header = entity.getContentType();
             if (header == null) {
-                return;
+                return null;
             }
             String contentType = header.getValue();
             String suffix = "";
-            String resourceName = Globals.DOWNLOAD_DIR_CACHE.get(page.getSeedName());
+            String resourceName = "";
             if (Strings.isNullOrEmpty(contentType)) {
-                resourceName += FileUtil.generateResourceName(url, suffix);
-                FileUtil.writeFileToDisk(resourceName, content);
-                return;
+                resourceName = folderName + FileUtil.generateResourceName(url, suffix);
+                file.setFileName(resourceName);
+                return file;
             } else {
                 if (isJsonPage(contentType) || isHtmlPage(contentType) || isXmlPage(contentType, new String(content))) {
-                    return;// 如果是页面就直接过滤掉
+                    return null;// 如果是页面就直接过滤掉
                 }
                 if (contentType.contains("svg")) {
                     suffix = "svg";
@@ -842,9 +857,10 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 }
             }
 
-            resourceName += FileUtil.generateResourceName(url, suffix);
-            FileUtil.writeFileToDisk(resourceName, content);
+            resourceName = folderName + FileUtil.generateResourceName(url, suffix);
+            file.setFileName(resourceName);
             page.setAvatar(resourceName);
+            return file;
         } catch (Exception e) {
             UrlQueue.newFailVisitedUrl(page.getSeedName(), url);
             logger.error("线程[{}]下载种子[{}]的url[{}]资源失败。",Thread.currentThread().getName() , page.getSeedName(), url, e);
@@ -858,6 +874,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 request.releaseConnection();
             }
         }
+        return null;
     }
 
     @Override
@@ -923,7 +940,6 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 request.releaseConnection();
             }
         }
-
         return null;
     }
 

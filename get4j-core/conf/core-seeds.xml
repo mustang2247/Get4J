@@ -135,11 +135,6 @@
             </description>
         </property>
         <property>
-            <name>download.hdfs</name>
-            <value></value>
-            <description>非必填项。如果业务需要下载url站点，则将此url站点保存的hdfs系统</description>
-        </property>
-        <property>
             <name>extract.class.impl</name>
             <value></value>
             <description>非必填项。如果业务需要先下载到本地，然后再从本地进行抽取内容，可配置此项。</description>

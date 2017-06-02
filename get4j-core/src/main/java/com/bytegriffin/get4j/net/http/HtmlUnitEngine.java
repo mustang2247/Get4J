@@ -173,7 +173,7 @@ public class HtmlUnitEngine extends AbstractHttpEngine implements HttpEngine {
             if (contentlength > big_file_max_size) {//大于10m
                 HttpClientBuilder httpClientBuilder = HttpClients.custom().setConnectionManagerShared(true);
                 Globals.HTTP_CLIENT_BUILDER_CACHE.put(page.getSeedName(), httpClientBuilder);
-                boolean isdone = HttpClientEngine.downloadBigFile(page.getSeedName(),url, contentlength);
+                boolean isdone = HttpClientEngine.cacheBigFile(page.getSeedName(), url, contentlength);
                 if (isdone) {
                     return page;
                 }

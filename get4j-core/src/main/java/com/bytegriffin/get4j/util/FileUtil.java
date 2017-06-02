@@ -40,7 +40,7 @@ public final class FileUtil {
 	/**
 	 * 读取User Agent文件到内存中
 	 *
-	 * @return List<String>
+	 * @return List
 	 */
 	public static List<String> readUserAgentFile(String userAgentFile) {
 		return readFileLines(userAgentFile);
@@ -50,8 +50,7 @@ public final class FileUtil {
 	 * 获取系统绝对路径 <br />
 	 * 将配置文件转换为爬虫系统的绝对路径，将classpath:/conf/user_agent转换成/opt/work/xxx/conf/user_agent
 	 *
-	 * @param classpath
-	 *            String
+	 * @param classpath   String
 	 * @return String
 	 */
 	public static String getSystemAbsolutePath(String classpath) {
@@ -76,9 +75,8 @@ public final class FileUtil {
 	 * 读取http代理文件转换为HttpProxy对象到内存中
 	 * http_proxy文件的格式是ip:port或者ip:port@username:password
 	 *
-	 * @param httpProxyFile
-	 *            String
-	 * @return List<HttpProxy>
+	 * @param httpProxyFile  String
+	 * @return List
 	 */
 	public static List<HttpProxy> readHttpProxyFile(String httpProxyFile) {
 		List<String> list = readFileLines(httpProxyFile);
@@ -119,8 +117,7 @@ public final class FileUtil {
 	/**
 	 * 将Proxy字符串解析成代理对象
 	 *
-	 * @param proxyString
-	 *            代理字符串
+	 * @param proxyString  代理字符串
 	 * @return HttpProxy
 	 */
 	public static HttpProxy formatProxy(String proxyString) {
@@ -145,9 +142,8 @@ public final class FileUtil {
 	/**
 	 * 读取文件的每行数据将其放回到一个ArrayList中
 	 *
-	 * @param configFile
-	 *            String
-	 * @return List<String>
+	 * @param configFile  String
+	 * @return List
 	 */
 	private static List<String> readFileLines(String configFile) {
 		configFile = getSystemAbsolutePath(configFile);
@@ -184,8 +180,7 @@ public final class FileUtil {
 	/**
 	 * 判断文件是否为空，是否有内容
 	 *
-	 * @param filename
-	 *            String
+	 * @param filename  String
 	 * @return boolean true：存在 false：不存在
 	 */
 	public static boolean isExistContont(String filename) {
@@ -196,8 +191,7 @@ public final class FileUtil {
 	/**
 	 * 在磁盘上创建下载、索引文件夹
 	 *
-	 * @param diskDir
-	 *            String
+	 * @param diskDir  String
 	 */
 	public static String makeDiskDir(String diskDir) {
 		diskDir = getSystemAbsolutePath(diskDir);
@@ -206,7 +200,7 @@ public final class FileUtil {
 			try {
 				homedir.mkdirs();
 			} catch (Exception ex) {
-				logger.warn("不能创建文件夹[" + diskDir + "]，它可能包含一些特殊字符串。", ex);
+				logger.warn("不能创建文件夹[{}]，它可能包含一些特殊字符串。", diskDir, ex);
 			}
 		}
 		return diskDir.endsWith(File.separator) ? diskDir : diskDir + File.separator;
@@ -215,8 +209,7 @@ public final class FileUtil {
 	/**
 	 * 生成文件夹以及以下的文件
 	 * 
-	 * @param filename
-	 *            String
+	 * @param filename   String
 	 */
 	public static void makeDiskFile(String filename) {
 		File file = new File(filename);
@@ -224,7 +217,7 @@ public final class FileUtil {
 			Files.createParentDirs(file);
 			Files.touch(file);
 		} catch (IOException e) {
-			logger.error("创建文件时出错。");
+			logger.error("创建文件时出错。", e);
 			EmailSender.sendMail(e);
 			ExceptionCatcher.addException(e);
 		}
@@ -233,10 +226,8 @@ public final class FileUtil {
 	/**
 	 * 按行追加内容
 	 *
-	 * @param fileName
-	 *            String
-	 * @param contents
-	 *            Collection
+	 * @param fileName   String
+	 * @param contents   Collection
 	 */
 	public static synchronized void append(String fileName, Collection<String> contents) {
 		if (contents == null || contents.isEmpty()) {
@@ -250,7 +241,7 @@ public final class FileUtil {
 				Files.append(str + System.getProperty("line.separator"), new File(fileName), Charset.defaultCharset());
 			}
 		} catch (IOException e) {
-			logger.error("追加文件时出错。");
+			logger.error("追加文件时出错。", e);
 			EmailSender.sendMail(e);
 			ExceptionCatcher.addException(e);
 		}
@@ -259,10 +250,8 @@ public final class FileUtil {
 	/**
 	 * 删除文件中的某行内容
 	 *
-	 * @param file
-	 *            String
-	 * @param content
-	 *            String
+	 * @param file    String
+	 * @param content   String
 	 */
 	public static void removeLine(String file, String content) {
 		try {
@@ -279,7 +268,7 @@ public final class FileUtil {
 			}
 			Files.move(tempFile, inFile);
 		} catch (IOException ex) {
-			logger.error("删除文件时出错。");
+			logger.error("删除文件时出错。", ex );
 			EmailSender.sendMail(ex);
 			ExceptionCatcher.addException(ex);
 		}
@@ -288,11 +277,10 @@ public final class FileUtil {
 	/**
 	 * 在本地磁盘生成页面
 	 *
-	 * @param page
-	 *            Page
+	 * @param page    Page
 	 */
 	public static void downloadPagesToDisk(Page page) {
-		String folderName = Globals.DOWNLOAD_DIR_CACHE.get(page.getSeedName());
+		String folderName = Globals.DOWNLOAD_DISK_DIR_CACHE.get(page.getSeedName());
 		String fileName = folderName + File.separator;
 		if (page.isJsonContent()) {
 			fileName += generatePageFileName(page.getUrl(), DefaultConfig.json_page_suffix);
@@ -313,8 +301,7 @@ public final class FileUtil {
 				content = page.getXmlContent().getBytes(page.getCharset());
 			}
 		} catch (UnsupportedEncodingException e) {
-			logger.error("Seed[" + page.getSeedName() + "]通过线程[" + Thread.currentThread().getName() + "]往硬盘上写入名为["
-					+ fileName + "]时出错。", e);
+			logger.error("Seed[{}]通过线程[{}]往硬盘上写入名为[{}]时出错。", page.getSeedName(), Thread.currentThread().getName(), fileName, e);
 			EmailSender.sendMail(e);
 			ExceptionCatcher.addException(e);
 		}
@@ -324,10 +311,8 @@ public final class FileUtil {
 	/**
 	 * 往硬盘上写文件
 	 *
-	 * @param fileName
-	 *            String
-	 * @param content
-	 *            byte[]
+	 * @param fileName  String
+	 * @param content    byte[]
 	 */
 	public static void writeFileToDisk(String fileName, byte[] content) {
 		if (Strings.isNullOrEmpty(fileName) || content == null) {
@@ -335,13 +320,13 @@ public final class FileUtil {
 		}
 		File file = new File(fileName);
 		if (file.exists() && content.length == file.length()) {
-			logger.warn("线程[" + Thread.currentThread().getName() + "]在往硬盘上写入名为[" + fileName + "]时发现硬盘上已存在此文件。");
+			logger.warn("线程[{}]在往硬盘上写入名为[{}]时发现此文件已存在。",Thread.currentThread().getName(), fileName);
 			return;
 		}
 		try {
 			Files.write(content, file);
 		} catch (IOException e) {
-			logger.error("线程[" + Thread.currentThread().getName() + "]往硬盘上写入页面时出错。", e);
+			logger.error("线程[{}]往硬盘上写入页面时出错。",Thread.currentThread().getName() , e);
 			EmailSender.sendMail(e);
 			ExceptionCatcher.addException(e);
 		}
@@ -351,8 +336,7 @@ public final class FileUtil {
 	 * 删除url的schema <br>
 	 * 例如：http://www.website.com ===> www.website.com
 	 * 
-	 * @param url
-	 *            String
+	 * @param url  String
 	 */
 	private static String deleteUrlSchema(String url) {
 		if (Strings.isNullOrEmpty(url)) {
@@ -372,7 +356,7 @@ public final class FileUtil {
 	 * @param suffix  文件后缀名
 	 * @return String
 	 */
-	private static String generatePageFileName(String url, String suffix) {
+	public static String generatePageFileName(String url, String suffix) {
 		String newUrl = deleteUrlSchema(url);
 		String laststr = newUrl.substring(newUrl.length() - 1, newUrl.length());
 		if (laststr.equals("/")) {
@@ -480,17 +464,15 @@ public final class FileUtil {
 	/**
 	 * 事先创建指定大小的空内容的文件
 	 *
-	 * @param fileName
-	 *            String
-	 * @param fileSize
-	 *            long
+	 * @param fileName  String
+	 * @param fileSize   long
 	 */
 	public static void makeDiskFile(String fileName, long fileSize) {
 		File newFile = new File(fileName);
 		try (RandomAccessFile raf = new RandomAccessFile(newFile, "rw")) {
 			raf.setLength(fileSize);
 		} catch (Exception e) {
-			logger.error("线程[" + Thread.currentThread().getName() + "]在硬盘上创建文件时出错。", e);
+			logger.error("线程[{}]在硬盘上创建文件时出错。",Thread.currentThread().getName(),  e);
 			EmailSender.sendMail(e);
 			ExceptionCatcher.addException(e);
 		}
@@ -511,16 +493,13 @@ public final class FileUtil {
 	}
 
 	/**
-	 * 下载文件到磁盘上
+	 * 下载大文件到磁盘上
 	 *
-	 * @param fileName
-	 *            String
-	 * @param contentLength
-	 *            Long
-	 * @param content
-	 *            InputStream
+	 * @param fileName  String
+	 * @param contentLength     Long
+	 * @param content  InputStream
 	 */
-	public static void writeFile(String fileName, Long contentLength, InputStream content) {
+	public static void writeBigFileToDisk(String fileName, Long contentLength, InputStream content) {
 		File newFile = new File(fileName);
 		try (BufferedInputStream bis = new BufferedInputStream(content);
 				RandomAccessFile raf = new RandomAccessFile(newFile, "rw")) {
@@ -537,13 +516,12 @@ public final class FileUtil {
 				if (temp >= 1 && temp > unitProgress) {// 如果下载过程出现百分比变化
 					unitProgress = temp;
 					if (unitProgress % 20 == 0) {
-						logger.info("线程[" + Thread.currentThread().getName() + "]下载文件[" + fileName + "]的进度为["
-								+ unitProgress + "%]。");
+						logger.info("线程[{}]下载文件[{}]的进度为[{}%]。",  Thread.currentThread().getName() ,fileName, unitProgress);
 					}
 				}
 			}
 		} catch (Exception e) {
-			logger.error("线程[" + Thread.currentThread().getName() + "]下载文件到磁盘时出错。", e);
+			logger.error("线程[{}]下载文件到磁盘时出错。", Thread.currentThread().getName(), e);
 			EmailSender.sendMail(e);
 			ExceptionCatcher.addException(e);
 		}
@@ -570,7 +548,7 @@ public final class FileUtil {
 				}
 			});
 		} catch (IOException e) {
-			logger.error("线程[" + Thread.currentThread().getName() + "]递归删除文件夹[" + path + "]时出错。", e);
+			logger.error("线程[{}]递归删除文件夹[{}]时出错。", Thread.currentThread().getName() , path, e);
 			EmailSender.sendMail(e);
 			ExceptionCatcher.addException(e);
 		}

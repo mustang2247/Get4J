@@ -64,7 +64,7 @@ public class DefaultConfig {
     /**
      * 默认 fail url 坏链存储文件
      */
-    public static final String fail_url_file = System.getProperty("user.dir") + File.separator + "data" + File.separator + "dump" + File.separator + "fail_url";
+    public static final String fail_url_file = System.getProperty("user.dir") + File.separator + "data" + File.separator + "dump" + File.separator + "fail_url.out";
 
     /**
      * 默认 页面变化探测器文件
@@ -72,7 +72,7 @@ public class DefaultConfig {
     public static final String probe_page_file = System.getProperty("user.dir") + File.separator + "data" + File.separator + "probe" + File.separator+ "probe_pages.bin";
 
     /**
-     * 获取相应种子的下载地址
+     * 获取相应种子的磁盘下载地址
      *
      * @param seedName 种子名称
      * @return String

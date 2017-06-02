@@ -57,7 +57,7 @@ public class ZookeeperClient extends Initializer{
 				switch (state) {
 				case LOST:
 				case SUSPENDED:
-					logger.info("连接zookeeper丢失。");
+					logger.error("连接zookeeper丢失。");
 					break;
 				case RECONNECTED:
 					logger.info("重新连接zookeeper。");
@@ -70,7 +70,7 @@ public class ZookeeperClient extends Initializer{
 		client.start();
 		try {
 			if (!client.getZookeeperClient().blockUntilConnectedOrTimedOut()) {
-				logger.info("连接zookeeper失败。");
+				logger.error("连接zookeeper失败。");
 				System.exit(1);
 			} else {
 				logger.info("连接zookeeper成功。");

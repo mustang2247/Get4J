@@ -75,7 +75,12 @@ public final class Globals {
     /**
      * 全局download dir缓存 key:seed_name value: download dir
      */
-    public static final Map<String, String> DOWNLOAD_DIR_CACHE = Maps.newHashMap();
+    public static final Map<String, String> DOWNLOAD_DISK_DIR_CACHE = Maps.newHashMap();
+    
+    /**
+     * key:seed_name  value: hdfs://address:port/seedname/
+     */
+    public static final Map<String, String> DOWNLOAD_HDFS_DIR_CACHE = Maps.newHashMap();
 
     /**
      * 全局lucene index dir缓存 key:seed_name value: lucene index dir

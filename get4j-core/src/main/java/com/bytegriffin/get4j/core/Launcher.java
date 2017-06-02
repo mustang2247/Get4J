@@ -139,8 +139,8 @@ public class Launcher extends TimerTask implements Command {
 			}
 			// 清空下载目录：将页面以及资源文件全部删除，从而节省磁盘空间
 			if (isDeleteDownloadFile) {
-				for (String seedName : Globals.DOWNLOAD_DIR_CACHE.keySet()) {
-					FileUtil.deleteFile(Globals.DOWNLOAD_DIR_CACHE.get(seedName));
+				for (String seedName : Globals.DOWNLOAD_DISK_DIR_CACHE.keySet()) {
+					FileUtil.deleteFile(Globals.DOWNLOAD_DISK_DIR_CACHE.get(seedName));
 				}
 			}
 		}

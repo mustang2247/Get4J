@@ -25,9 +25,11 @@ import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
 import com.bytegriffin.get4j.conf.Seed;
+import com.bytegriffin.get4j.core.ExceptionCatcher;
 import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.core.UrlQueue;
+import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.Sleep;
 import com.bytegriffin.get4j.util.StringUtil;
 import com.gargoylesoftware.htmlunit.WebResponse;
@@ -275,10 +277,8 @@ public abstract class AbstractHttpEngine {
 	 * 3.有时html页面中是这种形式：[meta charset="gb2312"]<br>
 	 * 4.如果都没有那只能返回utf-8
 	 *
-	 * @param contentType
-	 *            contentType
-	 * @param content
-	 *            转码前的content，有可能是乱码
+	 * @param contentType  contentType
+	 * @param content           转码前的content，有可能是乱码
 	 * @return String
 	 */
 	String getCharset(String contentType, String content) {
@@ -313,12 +313,9 @@ public abstract class AbstractHttpEngine {
 	/**
 	 * 根据ContentType设置page内容
 	 *
-	 * @param contentType
-	 *            contentType
-	 * @param content
-	 *            转码后的content
-	 * @param page
-	 *            page
+	 * @param contentType   contentType
+	 * @param content   转码后的content
+	 * @param page   page
 	 */
 	void setContent(String contentType, String content, Page page) {
 		if (isHtmlPage(contentType)) {
@@ -372,8 +369,11 @@ public abstract class AbstractHttpEngine {
 				|| HttpStatus.SC_INTERNAL_SERVER_ERROR == statusCode
 				|| HttpStatus.SC_SERVICE_UNAVAILABLE == statusCode) {
 			UrlQueue.newFailVisitedUrl(page.getSeedName(), page.getUrl());
-			Preconditions.checkArgument(false, "线程["+Thread.currentThread().getName()+"]访问种子["+seedName+"]的url["+page.getUrl()+"]请求发送["+statusCode+"]错误。");
+			String msg = "线程["+Thread.currentThread().getName()+"]访问种子["+seedName+"]的url["+page.getUrl()+"]请求发送["+statusCode+"]错误。";
+			Preconditions.checkArgument(false, msg);
 			logger.error("线程[{}]访问种子[{}]的url[{}]请求发送[{}]错误。", Thread.currentThread().getName(), seedName, page.getUrl(),statusCode);
+			EmailSender.sendMail(msg);
+            ExceptionCatcher.addException(seedName, msg);
 			return false;
 		} else if (HttpStatus.SC_MOVED_PERMANENTLY == statusCode || HttpStatus.SC_MOVED_TEMPORARILY == statusCode
 				|| HttpStatus.SC_SEE_OTHER == statusCode || HttpStatus.SC_TEMPORARY_REDIRECT == statusCode) {

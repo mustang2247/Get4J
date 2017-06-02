@@ -21,8 +21,10 @@ import com.bytegriffin.get4j.conf.ResourceSync;
 import com.bytegriffin.get4j.conf.ResourceSyncYamlHandler;
 import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.core.Initializer;
+import com.bytegriffin.get4j.core.Process;
 import com.bytegriffin.get4j.core.SpiderEngine;
 import com.bytegriffin.get4j.core.WorkerStatusOpt;
+import com.bytegriffin.get4j.download.HdfsDownloader;
 import com.bytegriffin.get4j.ha.ProbeMasterSelector;
 import com.bytegriffin.get4j.ha.ZookeeperClient;
 import com.bytegriffin.get4j.ha.ZookeeperOpt;
@@ -62,7 +64,6 @@ public class Cluster {
         if(Strings.isNullOrEmpty(clusterNode.getRedisAddress()) || Strings.isNullOrEmpty(clusterNode.getRedisMode()) 
         		|| Strings.isNullOrEmpty(clusterNode.getRedisAuth())){
         	logger.error("没有设置redis属性...");
-        	System.exit(1);
         }
         clusterNode.setInitializers(buildInitializers(clusterNode));
         setZookeeperOpt(clusterNode);
@@ -132,20 +133,32 @@ public class Cluster {
     }
 
     /**
+     * 开启Hdfs下载功能
+     * @return
+     */
+    public Cluster enableHdfs(){
+    	clusterNode.setHdfs(buildHdfs());
+    	return this;
+    }
+
+    /**
      * 构建初始化节点
      * @param node
      * @return
      */
     private static List<Initializer>  buildInitializers(ClusterNode node){
     	RedisStorage redis = null;
+    	List<Initializer> inits = Lists.newArrayList();
     	if(!Strings.isNullOrEmpty(node.getRedisMode()) && !Strings.isNullOrEmpty(node.getRedisAddress()) && !Strings.isNullOrEmpty(node.getRedisAuth())){
     		redis = new RedisStorage(node.getRedisMode(),node.getRedisAddress(),node.getRedisAuth());
+    		inits.add(redis);
     	}
     	ZookeeperClient zk = null;
     	if(!Strings.isNullOrEmpty(node.getZookeeperAddress())){
     		zk = new ZookeeperClient(node.getZookeeperAddress());
+    		inits.add(zk);
     	}
-    	return Lists.newArrayList(redis, zk);
+    	return inits;
     }
 
     /**
@@ -171,6 +184,10 @@ public class Cluster {
     	}
     }
 
+    private static Process buildHdfs(){
+    	return new HdfsDownloader();
+    }
+
     /**
      * 配置文件调用入口
      * @param args
@@ -181,7 +198,7 @@ public class Cluster {
 		List<Seed> seeds = context.load();
 
 		context = new Context(new ResourceSyncYamlHandler());
-		ResourceSync synchronizer = context.load();
+		ResourceSync resourceSync = context.load();
 
 		context = new Context(new ConfigurationXmlHandler());
 		Configuration configuration = context.load();
@@ -194,7 +211,7 @@ public class Cluster {
 		clusterNode.setInitializers(buildInitializers(clusterNode));
 		setZookeeperOpt(clusterNode);
 
-		SpiderEngine.create().setClusterNode(clusterNode).setSeeds(seeds).setResourceSync(synchronizer)
+		SpiderEngine.create().setClusterNode(clusterNode).addHdfs(buildHdfs()).setSeeds(seeds).setResourceSync(resourceSync)
 				.setConfiguration(configuration).setDynamicFields(dynamicFields).build();
 		logger.info("爬虫集群开始启动...");
 	}

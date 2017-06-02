@@ -8,34 +8,34 @@
     </description>
 
 	<property>
-		<name>redis.mode</name>
-		<value>one</value>
+		<name>fetch.redis.mode</name>
+		<value></value>
 		<description>
 			必填项。redis部署模式：one（单机）,sharded（分片）,cluster（集群）
 		</description>
 	</property>
 
 	<property>
-		<name>redis.address</name>
-		<value>192.168.1.13:6379</value>
+		<name>fetch.redis.address</name>
+		<value></value>
 		<description>
 			必填项。可以一个或者多个地址，格式：host1:port1,host2:port2
 		</description>
 	</property>
 
 	<property>
-		<name>redis.auth</name>
-		<value>foobared</value>
+		<name>fetch.redis.auth</name>
+		<value></value>
 		<description>
 			非必填项。redis密码认证。
 		</description>
 	</property>
 
 	<property>
-		<name>zookeeper.address</name>
-		<value>192.168.1.14:2181,192.168.1.14:2182,192.168.1.14:2183</value>
+		<name>ha.zookeeper.quorum</name>
+		<value></value>
 		<description>
-			必填项。可以一个或者多个地址，格式：host1:port1,host2:port2
+			必填项。格式：host1:port1,host2:port2
 		</description>
 	</property>
 

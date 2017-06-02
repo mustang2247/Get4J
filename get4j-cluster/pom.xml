@@ -50,6 +50,17 @@
 			<groupId>org.apache.curator</groupId>
 			<artifactId>curator-framework</artifactId>
 		</dependency>
+
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-common</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-hdfs-client</artifactId>
+		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -79,7 +90,30 @@
 					</execution>
 				</executions>
 			</plugin>
-
+			<!-- 打全量包 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.0.0</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<transformers>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>com.bytegriffin.get4j.Cluster</mainClass>
+								</transformer>
+							</transformers>
+							<shadedArtifactAttached>true</shadedArtifactAttached>
+							<shadedClassifierName>all-in-one</shadedClassifierName>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<!-- 打依赖包 -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

@@ -3,6 +3,7 @@ package com.bytegriffin.get4j.conf;
 import java.util.List;
 
 import com.bytegriffin.get4j.core.Initializer;
+import com.bytegriffin.get4j.core.Process;
 import com.bytegriffin.get4j.core.WorkerStatusOpt;
 import com.bytegriffin.get4j.probe.ProbeMasterChecker;
 
@@ -22,6 +23,7 @@ public class ClusterNode {
     private WorkerStatusOpt workerStatusOpt;
     // 单个实例，但其方法支持多个不同的seed
     private ProbeMasterChecker probeMasterChecker;
+    private Process hdfs;
 
     public ClusterNode(){ 	
     }
@@ -92,6 +94,14 @@ public class ClusterNode {
 
 	public void setProbeMasterChecker(ProbeMasterChecker probeMasterChecker) {
 		this.probeMasterChecker = probeMasterChecker;
+	}
+
+	public Process getHdfs() {
+		return hdfs;
+	}
+
+	public void setHdfs(Process hdfs) {
+		this.hdfs = hdfs;
 	}
 
 }

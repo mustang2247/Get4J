@@ -19,11 +19,11 @@ public class ClusterNodeXmlHandler extends AbstractConfig {
     // xml格式检验文件
     private final static String cluster_node_xsd_file = conf_path + "cluster-node.xsd";
 
-    private static final String redis_mode = "redis.mode";
-    private static final String redis_address = "redis.address";
-    private static final String redis_auth = "redis.auth";
+    private static final String redis_mode = "fetch.redis.mode";
+    private static final String redis_address = "fetch.redis.address";
+    private static final String redis_auth = "fetch.redis.auth";
 
-    private static final String zookeeper_address = "zookeeper.address";
+    private static final String zookeeper_address = "ha.zookeeper.quorum";
 
     /**
      * 加载configuration.xml配置文件内容到内存中

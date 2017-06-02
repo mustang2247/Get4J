@@ -16,7 +16,6 @@ import com.bytegriffin.get4j.conf.DynamicField;
 import com.bytegriffin.get4j.conf.ResourceSync;
 import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.download.DiskDownloader;
-import com.bytegriffin.get4j.download.HdfsDownloader;
 import com.bytegriffin.get4j.fetch.CascadeFetcher;
 import com.bytegriffin.get4j.fetch.DynamicFieldFetcher;
 import com.bytegriffin.get4j.fetch.ListDetailFetcher;
@@ -53,9 +52,7 @@ public final class SpiderEngine {
 	private Configuration configuration;
 	private ResourceSync resourceSync;
 	private List<DynamicField> dynamicFields;
-	private List<Process> fronts;
-	private List<Process> backs;
-	private List<Process> downloads;
+	private Process hdfs;
 	private List<Initializer> inits;
 	private WorkerStatusOpt workerStatusOpt;
 	private ProbeMasterChecker probeMasterChecker;
@@ -71,35 +68,12 @@ public final class SpiderEngine {
 	}
 
 	/**
-	 * 增加前端的loader，供外部项目调用
-	 * 
-	 * @param processes
+	 * 增加Hdfs下载流程
+	 * @param hdfs
 	 * @return
 	 */
-	public SpiderEngine addFrontLoader(List<Process> fronts) {
-		this.fronts = fronts;
-		return this;
-	}
-
-	/**
-	 * 增加后端的loader，供外部项目调用
-	 * 
-	 * @param processes
-	 * @return
-	 */
-	public SpiderEngine addBackLoader(List<Process> backs) {
-		this.backs = backs;
-		return this;
-	}
-
-	/**
-	 * 增加下载的loader，供外部项目调用
-	 * 
-	 * @param processes
-	 * @return
-	 */
-	public SpiderEngine addDownloader(List<Process> downloads) {
-		this.downloads = downloads;
+	public SpiderEngine addHdfs(Process hdfs) {
+		this.hdfs = hdfs;
 		return this;
 	}
 
@@ -116,6 +90,7 @@ public final class SpiderEngine {
 		this.inits = clusterNode.getInitializers();
 		this.workerStatusOpt = clusterNode.getWorkerStatusOpt();
 		this.probeMasterChecker = clusterNode.getProbeMasterChecker();
+		this.hdfs = clusterNode.getHdfs();
 		return this;
 	}
 
@@ -208,8 +183,7 @@ public final class SpiderEngine {
 	 * 1.初始化Http引擎的部分参数<br>
 	 * 2.测试在具体Http引擎下的代理是否可用<br>
 	 *
-	 * @param seed
-	 *            seed
+	 * @param seed  seed
 	 */
 	private void buildHttpEngine(Seed seed) {
 		HttpEngine http;
@@ -278,13 +252,6 @@ public final class SpiderEngine {
 			// 2.设置流程
 			StringBuilder subProcess = new StringBuilder();
 
-			if (fronts != null && fronts.size() > 0) {
-				for (Process p : fronts) {
-					p.init(seed);
-					subProcess.append(p.getClass().getSimpleName() + "-");
-				}
-			}
-
 			if (!Strings.isNullOrEmpty(seed.getFetchProbeSelector())) {
 				PageChangeProber p = new PageChangeProber(seed);
 				Globals.FETCH_PROBE_CACHE.put(seed.getSeedName(), p);
@@ -326,16 +293,12 @@ public final class SpiderEngine {
 				chain.addProcess(p);
 				p.init(seed);
 				subProcess.append("-DiskDownloader");
-			} else if (!Strings.isNullOrEmpty(seed.getDownloadHdfs())) {
-				chain.addProcess(new HdfsDownloader());
-				subProcess.append("-HdfsDownloader");
-			}
+			} 
 
-			if (downloads != null && downloads.size() > 0) {
-				for (Process p : downloads) {
-					p.init(seed);
-					subProcess.append(p.getClass().getSimpleName() + "-");
-				}
+			if(!Strings.isNullOrEmpty(seed.getDownloadHdfs()) && hdfs != null){
+				chain.addProcess(hdfs);
+				hdfs.init(seed);
+				subProcess.append("-HdfsDownloader");
 			}
 
 			// if (!Strings.isNullOrEmpty(seed.getExtractClassImpl())) {
@@ -381,13 +344,6 @@ public final class SpiderEngine {
 				freeProxyStorage.init(seed);
 				chain.addProcess(freeProxyStorage);
 				subProcess.append("-FreeProxyStorage");
-			}
-
-			if (backs != null && backs.size() > 0) {
-				for (Process p : backs) {
-					p.init(seed);
-					subProcess.append(p.getClass().getSimpleName() + "-");
-				}
 			}
 
 			Globals.FETCH_PAGE_MODE_CACHE.put(seedName, seed.getPageMode());
