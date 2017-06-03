@@ -180,18 +180,17 @@ public class Page {
 
     /**
      * 根据JsonPath解析JsonContent
-     *
-     * @param jsonPath Jsonpath字符串
+     * 注意:有些Http Response返回的Content-Type是text/html而不是json
+     * 
+     * @param jsonPath   Jsonpath字符串
      * @return Object
      */
-    public Object json(String jsonPath) {
-        if (Strings.isNullOrEmpty(jsonPath) || Strings.isNullOrEmpty(this.jsonContent) 
-        		|| this.isHtmlContent() || this.isXmlContent()) {
+    public String json(String jsonPath) {
+        if (Strings.isNullOrEmpty(jsonPath)  || this.isXmlContent()) {
             return null;
         }
         try{
-        	Object obj =  JsonPath.read(this.jsonContent, jsonPath);
-        	return obj;
+        	return  JsonPath.read(this.getContent(), jsonPath).toString();
         }catch(com.jayway.jsonpath.PathNotFoundException e){
         	return null;
         }
