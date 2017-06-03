@@ -56,8 +56,7 @@ public abstract class AbstractHttpEngine {
 	/**
 	 * 是否在页面中发现此内容
 	 *
-	 * @param content
-	 *            页面内容
+	 * @param content    页面内容
 	 * @return boolean
 	 */
 	private boolean isFind(String content) {
@@ -70,14 +69,10 @@ public abstract class AbstractHttpEngine {
 	 * 有的站点需要等待一段时间就可以访问正常；有的需要人工填写验证码，有的直接禁止ip访问等 <br>
 	 * 出现这种问题，爬虫会先记录下来，如果出现这类日志，爬虫使用者可以设置Http代理和UserAgent重新抓取
 	 *
-	 * @param seedName
-	 *            seedName
-	 * @param url
-	 *            url
-	 * @param content
-	 *            content
-	 * @param logger
-	 *            logger
+	 * @param seedName  seedName
+	 * @param url    url
+	 * @param content   content
+	 * @param logger    logger
 	 */
 	void frequentAccesslog(String seedName, String url, String content, Logger logger) {
 		if (isFind(content)) {
@@ -88,13 +83,10 @@ public abstract class AbstractHttpEngine {
 	/**
 	 * 转换页面内容： 将inputstream转换成string类型
 	 *
-	 * @param is
-	 *            页面内容输入流
-	 * @param charset
-	 *            编码
+	 * @param is   页面内容输入流
+	 * @param charset       编码
 	 * @return String
-	 * @throws IOException
-	 *             ioException
+	 * @throws IOException          ioException
 	 */
 	String getContentAsString(InputStream is, String charset) throws IOException {
 		return new String(ByteStreams.toByteArray(is), charset);
@@ -104,10 +96,8 @@ public abstract class AbstractHttpEngine {
 	 * 对url进行解码，否则就是类似这种格式：http://news.baidu.com/n?cmd=6&loc=0&name=%B1%B1%BE%A9
 	 * 暂时没用
 	 *
-	 * @param url
-	 *            url
-	 * @param charset
-	 *            charset
+	 * @param url    url
+	 * @param charset  charset
 	 * @return String
 	 */
 	@Deprecated
@@ -123,10 +113,8 @@ public abstract class AbstractHttpEngine {
 	/**
 	 * 初始化Http引擎配置参数：HttpProxy、UserAgent、Sleep、SleepRange
 	 *
-	 * @param seed
-	 *            seed
-	 * @param logger
-	 *            logger
+	 * @param seed    seed
+	 * @param logger    logger
 	 */
 	void initParams(Seed seed, Logger logger) {
 		// 1.初始化Http Proxy
@@ -156,10 +144,8 @@ public abstract class AbstractHttpEngine {
 	/**
 	 * 设置Sleep Range参数
 	 *
-	 * @param seed
-	 *            seed
-	 * @param logger
-	 *            logger
+	 * @param seed    seed
+	 * @param logger  logger
 	 */
 	private static void setSleepRange(Seed seed, Logger logger) {
 		String sleepRange = seed.getFetchSleepRange();
@@ -195,10 +181,8 @@ public abstract class AbstractHttpEngine {
 	/**
 	 * 设计Http请求间隔时间
 	 *
-	 * @param seedName
-	 *            种子名称
-	 * @param logger
-	 *            logger
+	 * @param seedName   种子名称
+	 * @param logger  logger
 	 */
 	protected static void sleep(String seedName, Logger logger) {
 		Integer millis = Globals.FETCH_SLEEP_CACHE.get(seedName);
@@ -215,8 +199,7 @@ public abstract class AbstractHttpEngine {
 	/**
 	 * 判断HttpClient下载是否为Json文件
 	 *
-	 * @param contentType
-	 *            contentType
+	 * @param contentType    contentType
 	 * @return boolean
 	 */
 	static boolean isJsonPage(String contentType) {
@@ -226,8 +209,7 @@ public abstract class AbstractHttpEngine {
 	/**
 	 * 判断是否为普通页面
 	 *
-	 * @param contentType
-	 *            contentType
+	 * @param contentType       contentType
 	 * @return boolean
 	 */
 	static boolean isHtmlPage(String contentType) {
@@ -237,10 +219,8 @@ public abstract class AbstractHttpEngine {
 	/**
 	 * 判断是否为xml文件 有的xml文件返回的ContentType也是text/html，但是根节点是<?xml ...>
 	 *
-	 * @param contentType
-	 *            contentType
-	 * @param content
-	 *            content
+	 * @param contentType    contentType
+	 * @param content  content
 	 * @return boolean
 	 */
 	static boolean isXmlPage(String contentType, String content) {
@@ -251,10 +231,8 @@ public abstract class AbstractHttpEngine {
 	/**
 	 * 设置页面host 可以将它当作request中header的host属性使用
 	 *
-	 * @param page
-	 *            Page
-	 * @param logger
-	 *            Logger
+	 * @param page     Page
+	 * @param logger  Logger
 	 */
 	void setHost(Page page, Logger logger) {
 		String host = "";
@@ -287,25 +265,39 @@ public abstract class AbstractHttpEngine {
 			charset = contentType.split("charset=")[1];
 		} else {// 但是有时Response的Header中只有 Content-Type:text/html;没有charset
 			if (isXmlPage(contentType, content)) { // 首先判断是不是xml文件
-				Document doc = Jsoup.parse(content, "", Parser.xmlParser());
-				Node root = doc.root();
-				Node node = root.childNode(0);
-				charset = node.attr("encoding");
+				charset = getXmlCharset(content);
 			} else if (isHtmlPage(contentType)) {// 如果是html，可以用jsoup解析html页面上的meta元素
-				Document doc = Jsoup.parse(content);
-				Elements eles1 = doc.select("meta[http-equiv=Content-Type]");
-				Elements eles2 = doc.select("meta[charset]");
-				if (!eles1.isEmpty() && eles1.get(0) != null) {
-					String meta = eles1.get(0).attr("content");
-					charset = meta.split("charset=")[1];
-				} else if (!eles2.isEmpty() && eles2.get(0) != null) {// 也可以是这种类型：
-					charset = eles2.get(0).attr("charset");
-				} else {// 如果html页面内也没有含Content-Type的meta标签，那就默认为utf-8
-					charset = Charset.defaultCharset().name();
-				}
+				charset = getHtmlCharset(content);
 			} else if (isJsonPage(contentType)) { // 如果是json，那么给他设置默认编码
-				charset = Charset.defaultCharset().name();
+				charset = getJsonCharset();
 			}
+		}
+		return charset;
+	}
+	
+	String getXmlCharset(String content){
+		Document doc = Jsoup.parse(content, "", Parser.xmlParser());
+		Node root = doc.root();
+		Node node = root.childNode(0);
+		return node.attr("encoding");
+	}
+	
+	String getJsonCharset(){
+		return Charset.defaultCharset().name();
+	}
+	
+	String getHtmlCharset(String content){
+		String charset;
+		Document doc = Jsoup.parse(content);
+		Elements eles1 = doc.select("meta[http-equiv=Content-Type]");
+		Elements eles2 = doc.select("meta[charset]");
+		if (!eles1.isEmpty() && eles1.get(0) != null) {
+			String meta = eles1.get(0).attr("content");
+			charset = meta.split("charset=")[1];
+		} else if (!eles2.isEmpty() && eles2.get(0) != null) {// 也可以是这种类型：
+			charset = eles2.get(0).attr("charset");
+		} else {// 如果html页面内也没有含Content-Type的meta标签，那就默认为utf-8
+			charset = Charset.defaultCharset().name();
 		}
 		return charset;
 	}

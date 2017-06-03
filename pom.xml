@@ -35,7 +35,7 @@
 		<httpcore.version>4.4.6</httpcore.version>
 		<httpclient.version>4.5.3</httpclient.version>
 		<jsoup.version>1.10.2</jsoup.version>
-		<htmlunit.version>2.26</htmlunit.version>
+		<selenium.version>3.4.0</selenium.version>
 		<fastjson.version>1.2.31</fastjson.version>
 		<jsonpath.version>2.2.0</jsonpath.version>
 		<!-- 注意：当前jsonpath版本引用旧版的json-smart会引起包冲突，因此加入一个新版本 -->
@@ -114,9 +114,43 @@
 			</dependency>
 
 			<dependency>
-				<groupId>net.sourceforge.htmlunit</groupId>
-				<artifactId>htmlunit</artifactId>
-				<version>${htmlunit.version}</version>
+				<groupId>org.seleniumhq.selenium</groupId>
+				<artifactId>selenium-java</artifactId>
+				<exclusions>
+					<exclusion>
+						<groupId>org.seleniumhq.selenium</groupId>
+						<artifactId>selenium-chrome-driver</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>org.seleniumhq.selenium</groupId>
+						<artifactId>selenium-edge-driver</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>org.seleniumhq.selenium</groupId>
+						<artifactId>selenium-ie-driver</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>org.seleniumhq.selenium</groupId>
+						<artifactId>selenium-firefox-driver</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>org.seleniumhq.selenium</groupId>
+						<artifactId>selenium-opera-driver</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>org.seleniumhq.selenium</groupId>
+						<artifactId>selenium-safari-driver</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>junit</groupId>
+						<artifactId>junit</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>javax.servlet</groupId>
+						<artifactId>javax.servlet-api</artifactId>
+					</exclusion>
+				</exclusions>
+				<version>${selenium.version}</version>
 			</dependency>
 
 			<dependency>
@@ -265,6 +299,14 @@
 					<exclusion>
 						<artifactId>commons-cli</artifactId>
 						<groupId>commons-cli</groupId>
+					</exclusion>
+					<exclusion>
+						<artifactId>commons-digester</artifactId>
+						<groupId>commons-digester</groupId>
+					</exclusion>
+					<exclusion>
+						<artifactId>commons-beanutils-core</artifactId>
+						<groupId>commons-beanutils</groupId>
 					</exclusion>
 					<exclusion>
 						<artifactId>commons-math3</artifactId>

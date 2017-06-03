@@ -60,8 +60,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>net.sourceforge.htmlunit</groupId>
-			<artifactId>htmlunit</artifactId>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-java</artifactId>
 		</dependency>
 
 		<dependency>
@@ -136,7 +136,6 @@
 		</dependency>
 
 	</dependencies>
-
 
 	<build>
 		<plugins>

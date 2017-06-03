@@ -51,6 +51,10 @@ public class DefaultConfig {
      */
     public static final boolean fetch_javascript_support = false;
 
+    public static final String win_phantomjs = System.getProperty("user.dir") + File.separator + "bin" + File.separator + "phantomjs.exe";
+    public static final String linux_phantomjs = System.getProperty("user.dir") + File.separator + "bin" + File.separator + "phantomjs";
+    public static final String phantomjs_log = System.getProperty("user.dir") + File.separator + "log" + File.separator + "get4j.log";
+    
     /**
      * 默认 user agent 配置文件
      */

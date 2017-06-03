@@ -915,7 +915,7 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 String content = new String(bytes);
 
                 if (Strings.isNullOrEmpty(content)) {
-                    logger.warn("线程[{}]探测种子[{}]的url[{}]内容为空。",Thread.currentThread().getName() ,page.getSeedName() , page.getUrl());
+                    logger.error("线程[{}]探测种子[{}]的url[{}]内容为空。",Thread.currentThread().getName() ,page.getSeedName() , page.getUrl());
                     return null;
                 }
 

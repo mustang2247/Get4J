@@ -12,9 +12,8 @@ public class WeiboPageParser implements PageParser {
     }
 
     public static void main(String[] args) throws Exception {
-        Spider.cascade().fetchUrl("http://weibo.com").parser(WeiboPageParser.class).defaultDownloadDisk().javascriptSupport(true)
-                .jdbc("jdbc:mysql://localhost:3306/get4j?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&user=root&password=root")
-                .thread(1).start();
+        Spider.cascade().fetchUrl("http://weibo.com/login.php").parser(WeiboPageParser.class)
+        		.javascriptSupport(true).defaultUserAgent().thread(1).start();
     }
 
 }

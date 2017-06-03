@@ -8,6 +8,7 @@ import javax.sql.DataSource;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.lucene.index.IndexWriter;
 import org.bson.Document;
+import org.openqa.selenium.WebDriver;
 
 import com.bytegriffin.get4j.conf.Seed;
 import com.bytegriffin.get4j.fetch.FetchResourceSelector;
@@ -126,7 +127,12 @@ public final class Globals {
      * 全局http_proxy缓存 key:seed_name value: WebClient
      */
     public static final Map<String, WebClient> WEBCLIENT_CACHE = Maps.newHashMap();
-
+    
+    /**
+     * 全局WebDriver缓存 key:seed_name value: WebDriver
+     */
+    public static final Map<String, WebDriver> WEBDRIVER_CACHE = Maps.newHashMap();
+    
     /**
      * 全局Http探针缓存 key:seed_name value: HttpEngine
      */

@@ -21,10 +21,10 @@ import com.bytegriffin.get4j.fetch.DynamicFieldFetcher;
 import com.bytegriffin.get4j.fetch.ListDetailFetcher;
 import com.bytegriffin.get4j.fetch.SingleFetcher;
 import com.bytegriffin.get4j.fetch.SiteFetcher;
-import com.bytegriffin.get4j.net.http.HtmlUnitEngine;
 import com.bytegriffin.get4j.net.http.HttpClientEngine;
 import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.HttpProxy;
+import com.bytegriffin.get4j.net.http.SeleniumEngine;
 import com.bytegriffin.get4j.net.http.UrlAnalyzer;
 import com.bytegriffin.get4j.net.sync.FtpSyncer;
 import com.bytegriffin.get4j.net.sync.RsyncSyncer;
@@ -188,8 +188,8 @@ public final class SpiderEngine {
 	private void buildHttpEngine(Seed seed) {
 		HttpEngine http;
 		if (seed.isFetchJavascriptSupport()) {
-			http = new HtmlUnitEngine();
-			logger.info("启用HtmlUnit作为抓取引擎。");
+			http = new SeleniumEngine();
+			logger.info("启用Selenium作为抓取引擎。");
 		} else {
 			http = new HttpClientEngine();
 			logger.info("启用HttpClient作为抓取引擎。");
