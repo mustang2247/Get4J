@@ -1,8 +1,6 @@
 package com.bytegriffin.get4j.sample;
 
 import java.util.Iterator;
-import java.util.ListIterator;
-
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.bytegriffin.get4j.Spider;
