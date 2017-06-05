@@ -25,7 +25,7 @@ import com.bytegriffin.get4j.core.Process;
 import com.bytegriffin.get4j.core.SpiderEngine;
 import com.bytegriffin.get4j.core.WorkerStatusOpt;
 import com.bytegriffin.get4j.download.HdfsDownloader;
-import com.bytegriffin.get4j.ha.ProbeMasterSelector;
+import com.bytegriffin.get4j.ha.ProbeMasterElection;
 import com.bytegriffin.get4j.ha.ZookeeperClient;
 import com.bytegriffin.get4j.ha.ZookeeperOpt;
 import com.bytegriffin.get4j.probe.ProbeMasterChecker;
@@ -174,7 +174,7 @@ public class Cluster {
      * @return
      */
     private static ProbeMasterChecker buildProbeMasterChecker(){
-    	return ProbeMasterSelector.single();
+    	return ProbeMasterElection.single();
     }
 
     private static void setZookeeperOpt(ClusterNode clusterNode){

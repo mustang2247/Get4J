@@ -49,6 +49,7 @@
 		<!-- 注意：lucene版本需要java8 -->
 		<lucene.version>6.5.0</lucene.version>
 		<protobuf.version>3.2.0</protobuf.version>
+		<protostuff.version>1.5.5</protostuff.version>
 		<javaxmail.version>1.5.6</javaxmail.version>
 		<!-- 注意：guava版本21.0是需要java8 -->
 		<guava.version>21.0</guava.version>
@@ -409,6 +410,18 @@
 						<groupId>com.squareup.okhttp</groupId>
 					</exclusion>
 				</exclusions>
+			</dependency>
+			
+			<dependency>
+			    <groupId>io.protostuff</groupId>
+			    <artifactId>protostuff-core</artifactId>
+			    <version>${protostuff.version}</version>
+			</dependency>
+
+			<dependency>
+			    <groupId>io.protostuff</groupId>
+			    <artifactId>protostuff-runtime</artifactId>
+			    <version>${protostuff.version}</version>
 			</dependency>
 
 		</dependencies>

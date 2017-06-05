@@ -22,36 +22,36 @@ import com.bytegriffin.get4j.util.Sleep;
  * Interval：集群中只需一个节点配置即可。<br>
  * Probe：集群中所有机器都要配置。
  */
-public final class ProbeMasterSelector  extends LeaderSelectorListenerAdapter implements ProbeMasterChecker {
+public final class ProbeMasterElection  extends LeaderSelectorListenerAdapter implements ProbeMasterChecker {
 
-	private static final Logger logger = LogManager.getLogger(ProbeMasterSelector.class);
+	private static final Logger logger = LogManager.getLogger(ProbeMasterElection.class);
 
-	private static final ProbeMasterSelector me = new ProbeMasterSelector();
+	private static final ProbeMasterElection me = new ProbeMasterElection();
 	private static final String zk_probe_path_prefix = "/probe/";
 	private LeaderSelector leaderSelector;  
 	private String seedName;
-	private static Map<String, ProbeMasterSelector> probe_master_map = Maps.newHashMap();
+	private static Map<String, ProbeMasterElection> probe_master_map = Maps.newHashMap();
 	private static Map<String, LeaderSelector> leader_selector_map = Maps.newHashMap();
 
-	private ProbeMasterSelector(){
+	private ProbeMasterElection(){
 	}
 
-	public static ProbeMasterSelector single(){
+	public static ProbeMasterElection single(){
 		return me;
 	}
 
-	static ProbeMasterSelector create(CuratorFramework client, String seedName){
-		ProbeMasterSelector pms = new ProbeMasterSelector(client, seedName);
+	static ProbeMasterElection create(CuratorFramework client, String seedName){
+		ProbeMasterElection pms = new ProbeMasterElection(client, seedName);
 		probe_master_map.put(seedName, pms);
 		return pms;
 	}
 
 	static boolean checkMaster(String seedName){
-		ProbeMasterSelector pms =  probe_master_map.get(seedName);
+		ProbeMasterElection pms =  probe_master_map.get(seedName);
 		if(pms == null){
 			return false;
 		}
-		return pms.check(seedName);
+		return pms.isActive(seedName);
 	}
 
 	/**
@@ -59,7 +59,7 @@ public final class ProbeMasterSelector  extends LeaderSelectorListenerAdapter im
 	 * @param client
 	 * @param seedName
 	 */
-	private ProbeMasterSelector(CuratorFramework client, String seedName) {
+	private ProbeMasterElection(CuratorFramework client, String seedName) {
 		this.seedName = seedName;
         leaderSelector = new LeaderSelector(client, zk_probe_path_prefix + seedName, this);  
         leaderSelector.autoRequeue();  
@@ -80,7 +80,7 @@ public final class ProbeMasterSelector  extends LeaderSelectorListenerAdapter im
 	 * 判断本机运行状态是否为Probe Master
 	 */
 	@Override
-	public boolean check(String seedName) {
+	public boolean isActive(String seedName) {
 		return leader_selector_map.get(seedName).hasLeadership();
 	}
 }

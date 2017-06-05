@@ -423,8 +423,7 @@ public final class SpiderEngine {
 		}
 		DefaultConfig.sync_open = Boolean.valueOf(open);
 		DefaultConfig.sync_batch_count = Integer.valueOf(resourceSync.getSync().get(AbstractConfig.batch_count_node));
-		DefaultConfig.sync_batch_time = Integer.valueOf(resourceSync.getSync().get(AbstractConfig.batch_count_node))
-				* 1000;
+		DefaultConfig.sync_batch_time = Integer.valueOf(resourceSync.getSync().get(AbstractConfig.batch_count_node)) * 1000;
 	}
 
 	/**
@@ -453,9 +452,9 @@ public final class SpiderEngine {
 			// 由于zookeeper选举过程是异步执行，因此需要等待一定时间，
 			// 暂时还没有好方法，直接获取外部项目的执行结果
 			if (probeMasterChecker != null) {
-				probeMasterChecker.check(seed.getSeedName());
+				probeMasterChecker.isActive(seed.getSeedName());
 				Sleep.seconds(DefaultConfig.probe_master_selector_timeout);
-				startUp(seed, workerStatusOpt, probeMasterChecker.check(seed.getSeedName()));
+				startUp(seed, workerStatusOpt, probeMasterChecker.isActive(seed.getSeedName()));
 			} else {
 				// 单机或集群下没有配置zookeeper，可直接根据每个节点的配置文件来设置probe
 				startUp(seed, workerStatusOpt, true);

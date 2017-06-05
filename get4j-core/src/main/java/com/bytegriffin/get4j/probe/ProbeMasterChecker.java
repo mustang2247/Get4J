@@ -2,6 +2,11 @@ package com.bytegriffin.get4j.probe;
 
 public interface ProbeMasterChecker {
 
-	boolean check(String seedName);
-	
+	/**
+	 * 是否处于Active状态
+	 * @param seedName
+	 * @return
+	 */
+	boolean isActive(String seedName);
+
 }

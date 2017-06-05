@@ -10,7 +10,6 @@ import com.bytegriffin.get4j.core.Globals;
 import com.bytegriffin.get4j.core.Page;
 import com.bytegriffin.get4j.net.http.HttpEngine;
 import com.bytegriffin.get4j.net.http.UrlAnalyzer;
-import com.bytegriffin.get4j.probe.ProbePageSerial.ProbePage;
 import com.bytegriffin.get4j.send.EmailSender;
 import com.bytegriffin.get4j.util.FileUtil;
 import com.bytegriffin.get4j.util.MD5Util;
@@ -46,7 +45,7 @@ public class PageChangeProber {
         // 1.设置page对象
         page = new Page(seed.getSeedName(), UrlAnalyzer.formatListDetailUrl(seed.getFetchUrl()), seed.getFetchHttpMethod());
         fetchProbeSelector = seed.getFetchProbeSelector();
-        
+
         if (DefaultConfig.default_value.equalsIgnoreCase(seed.getFetchProbeSleep()) ||
                 Strings.isNullOrEmpty(seed.getFetchProbeSleep()) ||
                 !StringUtil.isNumeric(seed.getFetchProbeSleep()) ||
@@ -85,7 +84,7 @@ public class PageChangeProber {
     	if(page == null){
     		return;
     	}
-    	if(ProbeFileStorage.finished.equalsIgnoreCase(probePage.getFinish())){
+    	if(ProbeFileStorage.finished.equalsIgnoreCase(probePage.getStatus())){
     		return;
     	}
     	String content = page.getContent();
@@ -108,7 +107,6 @@ public class PageChangeProber {
         }
 
         while (isrun) {
-
             // 2.获取最新页面内容
             String newContent = http.probePageContent(page);
             // 当页面内容为空时，发送Email通知
@@ -140,7 +138,7 @@ public class PageChangeProber {
             // 3.比对probe文件中存储url页面内容与新抓取的页面内容，
             // 如果相同并且probe文件finsh状态为已完成，则需要继续轮询监控抓取页面
             // 如果不同或者probe文件finish状态为未完成，需要更新probe文件中相同url的content内容 并且 需要抓取新变化的内容
-            if (!probePage.getContent().equalsIgnoreCase(MD5Util.convert(content)) || ProbeFileStorage.un_finish.equalsIgnoreCase(probePage.getFinish())) {
+            if (!probePage.getContent().equalsIgnoreCase(MD5Util.convert(content)) || ProbeFileStorage.un_finish.equalsIgnoreCase(probePage.getStatus())) {
                 probePage = ProbeFileStorage.update(page.getUrl(), content, ProbeFileStorage.un_finish);
                 logger.error("探测种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]发现新增内容，准备抓取更新操作。。。");
                 stop();
@@ -151,7 +149,6 @@ public class PageChangeProber {
         }
 
     }
-
 
 }
 

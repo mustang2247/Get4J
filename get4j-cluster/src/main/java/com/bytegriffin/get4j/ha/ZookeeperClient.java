@@ -91,7 +91,7 @@ public class ZookeeperClient extends Initializer{
 								.withACL(ZooDefs.Ids.OPEN_ACL_UNSAFE).forPath(ZookeeperOpt.getStatusNodeName(seedName), ZookeeperOpt.seed_idle_status.getBytes());
 					}
 					watchNodeStatus(seedName);
-					ProbeMasterSelector.create(client, seedName);
+					ProbeMasterElection.create(client, seedName);
 				}
 			}
 		} catch (Exception e) {
@@ -127,13 +127,13 @@ public class ZookeeperClient extends Initializer{
 							logger.info("Zookeeper发现一个新的节点[{}]连接进来，其状态为[{}]。", NetHelper.getClusterNodeName(), nodeValue);
 							if (!isFirstRun.get() && ZookeeperOpt.seed_run_status.equals(nodeValue) ) {
 								logger.info("Zookeeper发现在种子[{}]集群下的路径为[{}]有正在执行的任务，并且将此任务分配给新加入状态为[{}]的节点[{}]。", seedName, nodePath, nodeValue, NetHelper.getClusterNodeName());
-								SpiderEngine.create().startUp(Globals.SEED_CACHE.get(seedName), ZookeeperOpt.single(), ProbeMasterSelector.checkMaster(seedName));
+								SpiderEngine.create().startUp(Globals.SEED_CACHE.get(seedName), ZookeeperOpt.single(), ProbeMasterElection.checkMaster(seedName));
 							}
 							break;
 						case NODE_UPDATED:
 							if (!isFirstRun.get() && ZookeeperOpt.seed_run_status.equals(nodeValue) ) {
 								logger.info("Zookeeper发现在种子[{}]集群下的路径为[{}]有正在执行的任务，并且将此任务分配给状态为[{}]的节点[{}]。", seedName,  nodePath, nodeValue, NetHelper.getClusterNodeName());
-								SpiderEngine.create().startUp(Globals.SEED_CACHE.get(seedName), ZookeeperOpt.single(), ProbeMasterSelector.checkMaster(seedName));
+								SpiderEngine.create().startUp(Globals.SEED_CACHE.get(seedName), ZookeeperOpt.single(), ProbeMasterElection.checkMaster(seedName));
 							}
 							isFirstRun.set(false);
 							logger.info("Zookeeper将种子[{}]集群下的路径为[{}]一个节点[{}]的状态更新为[{}]。", seedName,  nodePath, NetHelper.getClusterNodeName(), nodeValue);
@@ -143,9 +143,9 @@ public class ZookeeperClient extends Initializer{
 							logger.warn("Zookeeper发现将种子[{}]集群下的路径为[{}]有一个状态为[{}]节点退出。", seedName,  nodePath, nodeValue, NetHelper.getClusterNodeName());
 							PageChangeProber probe = Globals.FETCH_PROBE_CACHE.get(seedName);
 							if (probe != null){
-								ProbeMasterSelector.checkMaster(seedName);
+								ProbeMasterElection.checkMaster(seedName);
 					        	Sleep.seconds(DefaultConfig.probe_master_selector_timeout);
-					        	boolean isProbeMaster = ProbeMasterSelector.checkMaster(seedName);
+					        	boolean isProbeMaster = ProbeMasterElection.checkMaster(seedName);
 					        	if(isProbeMaster){
 					        		SpiderEngine.create().startUp(Globals.SEED_CACHE.get(seedName), ZookeeperOpt.single(), isProbeMaster);
 									logger.warn("Zookeeper发现将种子[{}]集群下的路径为[{}]有一个状态为[{}]客户端[{}]退出。", seedName,  nodePath, nodeValue, NetHelper.getClusterNodeName());
