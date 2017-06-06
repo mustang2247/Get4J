@@ -151,7 +151,7 @@ elif [ "$1" = "restart" ] ; then
   if [ ! -d "$spider_home"/log ]; then
     mkdir $spider_home/log
   fi
-  $RUNJAVA -classpath $CLASSPATH $JAVA_OPTS com.bytegriffin.get4j.Spider
+  $RUNJAVA -classpath $CLASSPATH $JAVA_OPTS com.bytegriffin.get4j.Cluster
   code=$?
   if [ $code == 0 ]; then
     echo "爬虫启动失败。"

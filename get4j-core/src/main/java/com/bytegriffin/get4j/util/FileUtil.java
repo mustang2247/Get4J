@@ -320,7 +320,7 @@ public final class FileUtil {
 		}
 		File file = new File(fileName);
 		if (file.exists() && content.length == file.length()) {
-			logger.warn("线程[{}]在往硬盘上写入名为[{}]时发现此文件已存在。",Thread.currentThread().getName(), fileName);
+			//logger.warn("线程[{}]在往硬盘上写入名为[{}]时发现此文件已存在。",Thread.currentThread().getName(), fileName);
 			return;
 		}
 		try {

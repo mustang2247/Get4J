@@ -143,6 +143,10 @@ public class Seed {
      */
     private String storeLuceneIndex;
     /**
+     * 保存抓取结果到HBase中
+     */
+    private String storeHBase;
+    /**
      * 保存免费代理
      */
     private String storeFreeProxy;
@@ -458,6 +462,14 @@ public class Seed {
     public void setStoreMongodb(String storeMongodb) {
         this.storeMongodb = storeMongodb;
     }
+
+	public String getStoreHBase() {
+		return storeHBase;
+	}
+
+	public void setStoreHBase(String storeHBase) {
+		this.storeHBase = storeHBase;
+	}
 
 	public String getFetchHttpMethod() {
 		return fetchHttpMethod;

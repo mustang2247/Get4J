@@ -221,7 +221,6 @@ public class DBStorage implements Process {
      * @return Page
      */
     public synchronized Page readOne(DataSource dataSource, Page page) {
-
         Page rowData = null;
         String sql = "select * from page where fetch_url='" + page.getUrl() + "'";
         try (Connection con = dataSource.getConnection();

@@ -469,7 +469,7 @@ public class Spider {
      * @return Spider
      */
     public Spider hbase(String address) {
-        seed.setStoreLuceneIndex(address);
+        seed.setStoreHBase(address);
         return this;
     }
 

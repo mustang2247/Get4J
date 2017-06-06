@@ -24,6 +24,7 @@ public class ClusterNode {
     // 单个实例，但其方法支持多个不同的seed
     private ProbeMasterChecker probeMasterChecker;
     private Process hdfs;
+    private Process hbase;
 
     public ClusterNode(){ 	
     }
@@ -102,6 +103,14 @@ public class ClusterNode {
 
 	public void setHdfs(Process hdfs) {
 		this.hdfs = hdfs;
+	}
+
+	public Process getHbase() {
+		return hbase;
+	}
+
+	public void setHbase(Process hbase) {
+		this.hbase = hbase;
 	}
 
 }

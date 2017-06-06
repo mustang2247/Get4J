@@ -29,6 +29,7 @@ import com.bytegriffin.get4j.ha.ProbeMasterElection;
 import com.bytegriffin.get4j.ha.ZookeeperClient;
 import com.bytegriffin.get4j.ha.ZookeeperOpt;
 import com.bytegriffin.get4j.probe.ProbeMasterChecker;
+import com.bytegriffin.get4j.store.HBaseStorage;
 import com.bytegriffin.get4j.store.RedisStorage;
 import com.bytegriffin.get4j.util.NetHelper;
 import com.google.common.base.Strings;
@@ -142,6 +143,15 @@ public class Cluster {
     }
 
     /**
+     * 开启HBase存储功能
+     * @return
+     */
+    public Cluster enableHBase(){
+    	clusterNode.setHbase(buildHBase());
+    	return this;
+    }
+
+    /**
      * 构建初始化节点
      * @param node
      * @return
@@ -187,6 +197,10 @@ public class Cluster {
     private static Process buildHdfs(){
     	return new HdfsDownloader();
     }
+    
+    private static Process buildHBase(){
+    	return new HBaseStorage();
+    }
 
     /**
      * 配置文件调用入口
@@ -211,7 +225,7 @@ public class Cluster {
 		clusterNode.setInitializers(buildInitializers(clusterNode));
 		setZookeeperOpt(clusterNode);
 
-		SpiderEngine.create().setClusterNode(clusterNode).addHdfs(buildHdfs()).setSeeds(seeds).setResourceSync(resourceSync)
+		SpiderEngine.create().setClusterNode(clusterNode).addHdfs(buildHdfs()).addHBase(buildHBase()).setSeeds(seeds).setResourceSync(resourceSync)
 				.setConfiguration(configuration).setDynamicFields(dynamicFields).build();
 		logger.info("爬虫集群开始启动...");
 	}

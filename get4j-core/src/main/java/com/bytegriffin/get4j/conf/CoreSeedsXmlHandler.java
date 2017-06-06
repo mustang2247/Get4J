@@ -98,6 +98,8 @@ public class CoreSeedsXmlHandler extends AbstractConfig {
                     seed.setStoreJdbc(value);
                 } else if (name.equalsIgnoreCase(store_mongodb)) {
                     seed.setStoreMongodb(value);
+                } else if (name.equalsIgnoreCase(store_hbase)) {
+                    seed.setStoreHBase(value);
                 } else if (name.equalsIgnoreCase(store_lucene_index)) {
                     seed.setStoreLuceneIndex(value);
                 }

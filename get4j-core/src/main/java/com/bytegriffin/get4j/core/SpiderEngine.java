@@ -53,6 +53,7 @@ public final class SpiderEngine {
 	private ResourceSync resourceSync;
 	private List<DynamicField> dynamicFields;
 	private Process hdfs;
+	private Process hbase;
 	private List<Initializer> inits;
 	private WorkerStatusOpt workerStatusOpt;
 	private ProbeMasterChecker probeMasterChecker;
@@ -76,6 +77,16 @@ public final class SpiderEngine {
 		this.hdfs = hdfs;
 		return this;
 	}
+	
+	/**
+	 * 增加HBase下载流程
+	 * @param hbase
+	 * @return
+	 */
+	public SpiderEngine addHBase(Process hbase) {
+		this.hbase = hbase;
+		return this;
+	}
 
 	/**
 	 * 设置cluster节点初始化信息，在分布式情况下调用
@@ -91,6 +102,7 @@ public final class SpiderEngine {
 		this.workerStatusOpt = clusterNode.getWorkerStatusOpt();
 		this.probeMasterChecker = clusterNode.getProbeMasterChecker();
 		this.hdfs = clusterNode.getHdfs();
+		this.hbase = clusterNode.getHbase();
 		return this;
 	}
 
@@ -344,6 +356,11 @@ public final class SpiderEngine {
 				freeProxyStorage.init(seed);
 				chain.addProcess(freeProxyStorage);
 				subProcess.append("-FreeProxyStorage");
+			}
+			if(!Strings.isNullOrEmpty(seed.getStoreHBase()) && hbase != null){
+				chain.addProcess(hbase);
+				hbase.init(seed);
+				subProcess.append("-HBaseDownloader");
 			}
 
 			Globals.FETCH_PAGE_MODE_CACHE.put(seedName, seed.getPageMode());

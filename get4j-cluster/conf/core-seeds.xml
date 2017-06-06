@@ -15,7 +15,7 @@
         </property>
         <property>
             <name>fetch.page.mode</name>
-            <value>cascade</value>
+            <value>single</value>
             <description>
                 必填项。抓取的页面模型：list_detail（列表-详情页面）、single（单个页面)、cascade（单个页面中给出所有的url链接）、
                 site（单个站点，不包含外链）默认值是single。不同的页面模型会导致爬虫启动的抓取器不同
@@ -23,7 +23,7 @@
         </property>
         <property>
             <name>fetch.url</name>
-            <value>http://news.baidu.com</value>
+            <value>http://www.baidu.com</value>
             <description>
                 必填项。表示要抓取的Url，如果抓取模式fetchMode为list_detail，该值为列表Url，其中可变的页数PageNum需要用大括号{}括起来，
                 下一页程序会按照自增1来处理，注意：如果存在多个请求参数中间请用&amp;连接，否则xml验证会出错。
@@ -136,7 +136,7 @@
         </property>
         <property>
             <name>download.hdfs</name>
-            <value>hdfs://localhost:9000/</value>
+            <value>hdfs://192.168.1.102:9000/</value>
             <description>非必填项。如果业务需要下载url站点，则将此url站点保存的hdfs系统</description>
         </property>
         <property>
@@ -169,6 +169,11 @@
                 非必填项。保存到mongodb数据库中，多个可以写成mongodb://host1:27017,host2:27017
                 有密码可写成：mongodb://user1:pwd1@host1/?authSource=db1&amp;ssl=true
             </description>
+        </property>
+        <property>
+            <name>store.hbase</name>
+            <value>192.168.1.102:2181</value>
+            <description>非必填项。保存到HBase数据库中，格式与参数hbase.zookeeper.quorum保持一致</description>
         </property>
         <property>
             <name>store.lucene.index</name>
