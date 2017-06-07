@@ -43,7 +43,7 @@ public class ListDetailFetcher implements Process {
 
         // 3.初始化资源选择器缓存
         FetchResourceSelector.init(seed);
-        logger.info("种子[" + seed.getSeedName() + "]的组件ListDetailFetcher的初始化完成。");
+        logger.info("种子[{}]的组件ListDetailFetcher的初始化完成。",seed.getSeedName() );
     }
 
     @Override
@@ -72,7 +72,7 @@ public class ListDetailFetcher implements Process {
             if (links != null && links.size() > 0) {
                 UrlQueue.addUnVisitedLinks(page.getSeedName(), links);
                 page.setDetailLinks(links);
-                logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]url[" + page.getUrl() + "]的详情Url总数是[" + UrlQueue.getUnVisitedUrlCount(page.getSeedName()) + "]个。");
+                logger.info("线程[{}]抓取种子[{}]url[{}]的详情Url总数是[{}]个。",Thread.currentThread().getName(), page.getSeedName(), page.getUrl() ,UrlQueue.getUnVisitedUrlCount(page.getSeedName()) );
             }
 
         } else {// 访问的是detail url
@@ -91,15 +91,12 @@ public class ListDetailFetcher implements Process {
                 UrlAnalyzer.custom(detailPage).sniffAndSetResources();
             }
 
-            // 4.设置详情页DetailPage其它属性
-            detailPage.setFetchTime(DateUtil.getCurrentDate());
-
-            // 5.将详情页面属性指定为传递对象，当Page类增加新属性后此段代码也需要更新
+            // 4.将详情页面属性指定为传递对象，当Page类增加新属性后此段代码也需要更新
             page.setTitle(detailPage.getTitle());
             page.setAvatar(detailPage.getAvatar());
             page.setCharset(detailPage.getCharset());
             page.setCookies(detailPage.getCookies());
-            page.setFetchTime(detailPage.getFetchTime());
+            page.setFetchTime(DateUtil.getCurrentDate());
             page.setHtmlContent(detailPage.getHtmlContent());
             page.setJsonContent(detailPage.getJsonContent());
             page.setXmlContent(detailPage.getXmlContent());
@@ -111,7 +108,7 @@ public class ListDetailFetcher implements Process {
             page.setUrl(detailPage.getUrl());
             page.setMethod(detailPage.getMethod());
 
-            logger.info("线程[" + Thread.currentThread().getName() + "]抓取种子[" + page.getSeedName() + "]的url[" + page.getUrl() + "]完成。");
+            logger.info("线程[{}]抓取种子[{}]的url[{}]完成。", Thread.currentThread().getName(), page.getSeedName() , page.getUrl() );
         }
 
     }

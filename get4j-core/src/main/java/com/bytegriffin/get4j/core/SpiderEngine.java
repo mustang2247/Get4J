@@ -52,7 +52,6 @@ public final class SpiderEngine {
 	private Configuration configuration;
 	private ResourceSync resourceSync;
 	private List<DynamicField> dynamicFields;
-	private Process hdfs;
 	private Process hbase;
 	private List<Initializer> inits;
 	private WorkerStatusOpt workerStatusOpt;
@@ -66,16 +65,6 @@ public final class SpiderEngine {
 
 	public static SpiderEngine create() {
 		return new SpiderEngine();
-	}
-
-	/**
-	 * 增加Hdfs下载流程
-	 * @param hdfs
-	 * @return
-	 */
-	public SpiderEngine addHdfs(Process hdfs) {
-		this.hdfs = hdfs;
-		return this;
 	}
 	
 	/**
@@ -101,7 +90,6 @@ public final class SpiderEngine {
 		this.inits = clusterNode.getInitializers();
 		this.workerStatusOpt = clusterNode.getWorkerStatusOpt();
 		this.probeMasterChecker = clusterNode.getProbeMasterChecker();
-		this.hdfs = clusterNode.getHdfs();
 		this.hbase = clusterNode.getHbase();
 		return this;
 	}
@@ -305,12 +293,6 @@ public final class SpiderEngine {
 				chain.addProcess(p);
 				p.init(seed);
 				subProcess.append("-DiskDownloader");
-			} 
-
-			if(!Strings.isNullOrEmpty(seed.getDownloadHdfs()) && hdfs != null){
-				chain.addProcess(hdfs);
-				hdfs.init(seed);
-				subProcess.append("-HdfsDownloader");
 			}
 
 			// if (!Strings.isNullOrEmpty(seed.getExtractClassImpl())) {

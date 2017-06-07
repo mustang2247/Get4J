@@ -23,7 +23,7 @@
         </property>
         <property>
             <name>fetch.url</name>
-            <value>http://www.baidu.com</value>
+            <value></value>
             <description>
                 必填项。表示要抓取的Url，如果抓取模式fetchMode为list_detail，该值为列表Url，其中可变的页数PageNum需要用大括号{}括起来，
                 下一页程序会按照自增1来处理，注意：如果存在多个请求参数中间请用&amp;连接，否则xml验证会出错。
@@ -133,11 +133,6 @@
                 不需要那就不需要配置此项；如果想配置在本爬虫其它目录下，前缀可以用classpath；如果想配置到爬虫外的其它路径可以用操作系统的绝对路径，需要注意的是
                 当本地环境配置了资源服务器那么这个值可配置成静态服务器地址，例如：http://static.site.com，此时还需要配合启动rsync/ftp/scp同步功能，可以参考resource-sync.yaml文件
             </description>
-        </property>
-        <property>
-            <name>download.hdfs</name>
-            <value>hdfs://192.168.1.102:9000/</value>
-            <description>非必填项。如果业务需要下载url站点，则将此url站点保存的hdfs系统</description>
         </property>
         <property>
             <name>extract.class.impl</name>

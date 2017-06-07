@@ -12,7 +12,6 @@
 	<name>get4j-cluster</name>
 	<url>https://github.com/bytegriffin/Get4J</url>
 
-
 	<dependencies>
 
 		<dependency>
@@ -47,20 +46,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-common</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-hdfs-client</artifactId>
-		</dependency>
-
-		<dependency>
 			<groupId>org.apache.hbase</groupId>
 			<artifactId>hbase-client</artifactId>
 		</dependency>
-
 
 	</dependencies>
 
