@@ -75,37 +75,17 @@ else
 fi
 
 export spider_pid=$spider_home/get4j.pid
-export spider_prgname="spider"
+export spider_prgname="Spider"
 
-check_process_exists(){
-  if [ -f "$spider_pid" ]; then
-    pid=`cat $spider_pid`
-    [ -z $pid ] &&  pid="-1"
-    kill -0 $pid > /dev/null 2>&1
-    find_pids=`ps aux | grep $spider_prgname | grep -v 'grep' | awk '{print $2}'`
-    for find_pid in $find_pids
-    do  
-      if [ $find_pid = $pid ]; then
-        echo "爬虫进程已存在, 不能启动新进程。"
-        exit 0
-      fi  
-    done
-  fi
-}
-# 重新检查pid是否启动成功，是因为启动程序会检查配置文件是否合规，如果不合格仍然会启动失败
-recheck_process_exists(){
-  if [ -f "$spider_pid" ]; then
-    pid=`cat $spider_pid`
-    [ -z $pid ] &&  pid="-1"
-    kill -0 $pid > /dev/null 2>&1
-    find_pids=`ps aux | grep $spider_prgname | grep -v 'grep' | awk '{print $2}'`
-    for find_pid in $find_pids
-    do  
-      if [ $find_pid = $pid ]; then
-        exit 0
-      fi  
-    done
-  fi
+psid=0
+
+checkpid() {  
+   javaps=`$JAVA_HOME/bin/jps | grep $spider_prgname`
+   if [ -n "$javaps" ]; then  
+      psid=`echo $javaps | awk '{print $1}'`  
+   else  
+      psid=0  
+   fi
 }
 
 # if no args specified, show usage
@@ -120,49 +100,47 @@ EOF
 fi
 
 if [ "$1" = "start" ] ; then
-  check_process_exists
   if [ ! -d "$spider_home"/log ]; then
     mkdir $spider_home/log
     chmod a+x $spider_home/log
   fi
-  echo $$ > $spider_pid
-  $RUNJAVA -classpath $CLASSPATH $JAVA_OPTS com.bytegriffin.get4j.Cluster
-  code=$?
-  if [ $code == 0 ]; then
-    echo "爬虫启动失败。"
-    exit $code
+  checkpid
+  if [ $psid -ne 0 ]; then
+	echo "爬虫已经处于运行状态。"
+  else
+  	if [ -f "$spider_pid" ]; then
+  	   rm -rf $spider_pid
+	fi
+	$RUNJAVA -classpath $CLASSPATH $JAVA_OPTS com.bytegriffin.get4j.Cluster & 
+	checkpid
+	if [ $psid -ne 0 ]; then
+	   echo $psid >> $spider_pid
+	   echo "爬虫正在启动。。。"
+	else
+	   echo "爬虫启动失败。"
+	fi
   fi
-  recheck_process_exists
-  code=$?
-  if [ $code == 0 ]; then
-    echo "爬虫启动失败。"
-    rm -rf $spider_pid
-    exit $code
-  fi
-  echo "爬虫启动成功。"
 elif [ "$1" = "restart" ] ; then
   if [ -f "$spider_pid" ]; then
     kill -9 `cat $spider_pid` > /dev/null 2>&1 | xargs rm -rf $spider_pid
-    echo "Stop success."
   else
     ps -ef | grep $spider_prgname | awk '{print $2}' | xargs kill -9 > /dev/null 2>&1 &
   fi
-  check_process_exists
   if [ ! -d "$spider_home"/log ]; then
     mkdir $spider_home/log
   fi
-  $RUNJAVA -classpath $CLASSPATH $JAVA_OPTS com.bytegriffin.get4j.Cluster
-  code=$?
-  if [ $code == 0 ]; then
-    echo "爬虫启动失败。"
-    rm -rf $spider_pid
-    exit $code
+  $RUNJAVA -classpath $CLASSPATH $JAVA_OPTS com.bytegriffin.get4j.Cluster &
+  checkpid
+  if [ $psid -ne 0 ]; then
+  	echo $psid >> $spider_pid
+    echo "爬虫正在重启。。。"
+  else
+	echo "爬虫重启失败。"
   fi
-  echo "爬虫重新启动成功。"
 elif [ "$1" = "stop" ] ; then
   if [ -f "$spider_pid" ]; then
     kill -9 `cat $spider_pid` > /dev/null 2>&1 | xargs rm -rf $spider_pid
-    echo "爬虫关闭成功。"
+    echo "爬虫成功关闭。"
   else
     ps -ef | grep $spider_prgname | awk '{print $2}' | xargs kill -9 > /dev/null 2>&1 &
   fi

@@ -26,6 +26,7 @@
 	<modules>
 		<module>get4j-core</module>
 		<module>get4j-cluster</module>
+		<module>get4j-sample</module>
 	</modules>
 
 	<properties>
