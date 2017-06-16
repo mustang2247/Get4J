@@ -24,7 +24,8 @@
                 <include>conf/**</include>
                 <include>data/**</include>
                 <include>LICENSE</include>
-                <include>README.txt</include>
+                <include>INSTALL.txt</include>
+                <include>README.md</include>
                 <include>logo.png</include>
             </includes>
             <fileMode>0755</fileMode>
