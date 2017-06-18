@@ -11,12 +11,12 @@ public class DangdangPageParser  implements PageParser {
 
     @Override
     public void parse(Page page) {
-       System.err.println(page.getTitle() + "   " + page.getUrl() );
+       System.err.println("书名："+page.getTitle() + "  详情页：" + page.getUrl() );
     }
 
     public static void main(String[] args) throws Exception {
         Spider.list_detail().fetchUrl("http://bang.dangdang.com/books/bestsellers/1-{1}").detailSelector("div.name > a[href]")
-                .parser(IQiyiPageParser.class).thread(1).start();
+                .parser(DangdangPageParser.class).thread(1).start();
     }
 
 }
