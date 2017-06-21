@@ -14,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 public final class DateUtil {
 
 	private static final Logger logger = LogManager.getLogger(DateUtil.class);
-    public static final String yyyyMMdd = "yyyy-MM-dd";
     public static final String yyyyMMddHHmmss = "yyyy-MM-dd HH:mm:ss";
 
     public static Date strToDate(String str) {
