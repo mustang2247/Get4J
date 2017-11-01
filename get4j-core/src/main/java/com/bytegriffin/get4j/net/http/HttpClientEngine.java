@@ -520,9 +520,10 @@ public class HttpClientEngine extends AbstractHttpEngine implements HttpEngine {
                 return page;
             }
             HttpEntity entity = response.getEntity();
-            if (entity == null) {
+            if (entity == null || entity.getContent() != null) {
                 logger.warn("线程[{}]访问种子[{}]的url[{}]内容为空。",Thread.currentThread().getName(),  page.getSeedName() , page.getUrl() );
             }
+
             // 设置Response Cookie
             Header header = response.getLastHeader("Set-Cookie");
             if (header != null) {
