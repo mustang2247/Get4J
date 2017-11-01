@@ -18,14 +18,15 @@ public class ChinaunixBlogPageParser implements PageParser {
     @Override
     public void parse(Page page) {
         String title = page.getTitle();
-        System.err.println(title + "  " + page.getAvatar());
+        System.err.println(" 博客标题：" + title + " 博客avatar：" + page.getAvatar());
     }
 
     public static void main(String[] args) throws Exception {
         Spider.list_detail().fetchUrl("http://blog.chinaunix.net/site/index/page/{1}.html")
                 .totalPages(1).detailSelector("div.two_cont2_1>a[href]").parser(ChinaunixBlogPageParser.class).defaultUserAgent()
-                .resourceSelector("div.classify_con1").defaultDownloadDisk()
-                .scp("192.168.1.11", "roo", "/home/roo/桌面", 22)
+                .resourceSelector("div.classify_con1")
+                .defaultDownloadDisk()
+                //.scp("192.168.1.11", "roo", "/home/roo/桌面", 22)
                 //.defaultProbe()
                 //.probe("div.classify_middle1", 30)
                 //.jdbc("jdbc:mysql://localhost:3306/get4j?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&user=root&password=root")

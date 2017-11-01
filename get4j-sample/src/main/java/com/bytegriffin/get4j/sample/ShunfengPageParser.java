@@ -26,7 +26,7 @@ public class ShunfengPageParser implements PageParser {
     }
 
     public static void main(String[] args) throws Exception {
-    	String orderId = "613813602150";//要查询的单号
+    	String orderId = "221728091556";//要查询的单号
         Spider.single().fetchUrl("http://www.kuaidi100.com/query?type=shunfeng&postid=" + orderId)
                 .parser(ShunfengPageParser.class).thread(1).start();
     }

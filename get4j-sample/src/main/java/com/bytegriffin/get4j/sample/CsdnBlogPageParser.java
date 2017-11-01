@@ -13,7 +13,7 @@ public class CsdnBlogPageParser implements PageParser {
 
     public static void main(String[] args) throws Exception {//blog_list clearfix
         Spider.list_detail().fetchUrl("http://blog.csdn.net/?&page={1}").sleepRange(3, 5)
-                .resourceSelector("img.head[src]").totalPages(1).detailSelector("h3.tracking-ad>a[href]")
+                .resourceSelector("img.head[src]").totalPages(1).detailSelector("h3.csdn-tracking-statistics>a[href]")
                 .parser(CsdnBlogPageParser.class).defaultUserAgent()
                 //.jdbc("jdbc:mysql://localhost:3306/get4j?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&user=root&password=root")
                 //.mongodb("mongodb://localhost:27017")

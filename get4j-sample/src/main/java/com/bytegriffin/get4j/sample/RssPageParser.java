@@ -23,7 +23,7 @@ public class RssPageParser implements PageParser {
     public static void main(String[] args) throws Exception {
 //		String url = "http://www.nhzy.org/feed"; http://news.baidu.com/n?cmd=1&class=gsdt&tn=rss
         Spider.cascade().fetchUrl("http://news.baidu.com/n?cmd=1&class=gsdt&tn=rss").parser(RssPageParser.class)
-                .jdbc("jdbc:mysql://localhost:3306/get4j?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&user=root&password=root")
-                .thread(3).downloadDisk("classpath:/data/download/rss/").start();
+                //.jdbc("jdbc:mysql://localhost:3306/get4j?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&user=root&password=root")
+                .thread(3).start();
     }
 }
