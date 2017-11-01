@@ -2,6 +2,7 @@ package com.bytegriffin.get4j.download;
 
 import java.io.File;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -69,8 +70,8 @@ public class DiskDownloader implements Process {
         // 2.下载页面中的资源文件
        String folderName =  Globals.DOWNLOAD_DISK_DIR_CACHE.get(page.getSeedName());
         List<DownloadFile> list = HttpClientEngine.downloadResources(page, folderName);
-        for(DownloadFile file : list){
-        	FileUtil.writeFileToDisk(file.getFileName(), file.getContent());
+        if(list != null && !list.isEmpty()) {
+        	list.stream().filter(Objects::nonNull).forEach(file -> FileUtil.writeFileToDisk(file.getFileName(), file.getContent()));
         }
         //下载资源文件中的大文件
         downloadBigFile(page.getSeedName());
