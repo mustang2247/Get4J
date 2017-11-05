@@ -2,11 +2,14 @@
 <!-- 爬虫集群配置 -->
 <node>
 
-	<name>cluster1</name>
-    <description>
-        必填项。集群节点名称要保证唯一。
-    </description>
-
+	<property>
+		<name>node.name</name>
+		<value>cluster1</value>
+		<description>
+			必填项。集群节点名称要保证唯一。
+		</description>
+	</property>
+	
 	<property>
 		<name>fetch.redis.mode</name>
 		<value></value>

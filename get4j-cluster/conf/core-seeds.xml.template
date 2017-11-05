@@ -3,11 +3,14 @@
 <seeds>
 
     <seed>
-        <name>seed123</name>
-        <description>
-            必填项。表示要抓取Seed的实例名称，如果需求是抓取多个Seed：seed1、seed2，那么seed之间的xml定义有先后关系，
-            先定义的seed1会先被解析并执行，之后才是执行seed2，假设seed2没有定义time.start选项，那么系统会在抓取完seed1后再抓取seed2。
-        </description>
+        <property>
+            <name>seed.name</name>
+            <value>seed1</value>
+	        <description>
+	            必填项。表示要抓取Seed的实例名称，如果需求是抓取多个Seed：seed1、seed2，那么seed之间的xml定义有先后关系，
+	            先定义的seed1会先被解析并执行，之后才是执行seed2，假设seed2没有定义time.start选项，那么系统会在抓取完seed1后再抓取seed2。
+	        </description>
+        </property>
         <property>
             <name>worker.thread.count</name>
             <value>1</value>
@@ -15,7 +18,7 @@
         </property>
         <property>
             <name>fetch.page.mode</name>
-            <value>single</value>
+            <value>list_detail</value>
             <description>
                 必填项。抓取的页面模型：list_detail（列表-详情页面）、single（单个页面)、cascade（单个页面中给出所有的url链接）、
                 site（单个站点，不包含外链）默认值是single。不同的页面模型会导致爬虫启动的抓取器不同
@@ -127,7 +130,7 @@
         </property>
         <property>
             <name>download.disk</name>
-            <value></value>
+            <value>default</value>
             <description>
                 非必填项。如果业务需要下载url站点的页面或资源文件，那么会保存在本地的磁盘目录/data/download/${seedname}下，如果选择默认路径那就填default；如果
                 不需要那就不需要配置此项；如果想配置在本爬虫其它目录下，前缀可以用classpath；如果想配置到爬虫外的其它路径可以用操作系统的绝对路径，需要注意的是
@@ -164,11 +167,6 @@
                 非必填项。保存到mongodb数据库中，多个可以写成mongodb://host1:27017,host2:27017
                 有密码可写成：mongodb://user1:pwd1@host1/?authSource=db1&amp;ssl=true
             </description>
-        </property>
-        <property>
-            <name>store.hbase</name>
-            <value>192.168.1.102:2181</value>
-            <description>非必填项。保存到HBase数据库中，格式与参数hbase.zookeeper.quorum保持一致</description>
         </property>
         <property>
             <name>store.lucene.index</name>

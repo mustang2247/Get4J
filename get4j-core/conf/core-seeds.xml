@@ -3,7 +3,10 @@
 <seeds>
 
     <seed>
-        <name>seed123</name>
+        <property>
+            <name>seed.name</name>
+            <value>seed1</value>
+        </property>
         <property>
             <name>worker.thread.count</name>
             <value>1</value>

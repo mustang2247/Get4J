@@ -40,17 +40,17 @@ public class ClusterNodeXmlHandler extends AbstractConfig {
         if (root == null) {
             return null;
         }
-        String nodeName = root.element(name_node).getStringValue();
         List<Element> propElements = root.elements(property_node);
-        ClusterNode conf = new ClusterNode(nodeName);
-        conf.setNodeName(nodeName);
+        ClusterNode conf = new ClusterNode();
         for (Element property : propElements) {
             if (property == null) {
                 continue;
             }
             String name = property.element(name_node).getStringValue();
             String value = property.element(value_node).getStringValue();
-            if (name.equalsIgnoreCase(redis_mode)) {
+            if (name.equalsIgnoreCase(node_name)) {
+            	conf.setNodeName(value);
+            } else if (name.equalsIgnoreCase(redis_mode)) {
             	conf.setRedisMode(value);
             } else if (name.equalsIgnoreCase(redis_address)) {
             	conf.setRedisAddress(value);

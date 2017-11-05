@@ -3,11 +3,14 @@
 <seeds>
 
     <seed>
-        <name>seed123</name>
-        <description>
-            必填项。表示要抓取Seed的实例名称，如果需求是抓取多个Seed：seed1、seed2，那么seed之间的xml定义有先后关系，
-            先定义的seed1会先被解析并执行，之后才是执行seed2，假设seed2没有定义time.start选项，那么系统会在抓取完seed1后再抓取seed2。
-        </description>
+        <property>
+            <name>seed.name</name>
+            <value>seed1</value>
+	        <description>
+	            必填项。表示要抓取Seed的实例名称，如果需求是抓取多个Seed：seed1、seed2，那么seed之间的xml定义有先后关系，
+	            先定义的seed1会先被解析并执行，之后才是执行seed2，假设seed2没有定义time.start选项，那么系统会在抓取完seed1后再抓取seed2。
+	        </description>
+        </property>
         <property>
             <name>worker.thread.count</name>
             <value>1</value>

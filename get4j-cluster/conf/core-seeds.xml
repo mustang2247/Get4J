@@ -3,14 +3,17 @@
 <seeds>
 
     <seed>
-        <name>seed123</name>
+        <property>
+            <name>seed.name</name>
+            <value>seed1</value>
+        </property>
         <property>
             <name>worker.thread.count</name>
             <value>1</value>
         </property>
         <property>
             <name>fetch.page.mode</name>
-            <value>single</value>
+            <value>list_detail</value>
         </property>
         <property>
             <name>fetch.url</name>
@@ -70,7 +73,7 @@
         </property>
         <property>
             <name>download.disk</name>
-            <value></value>
+            <value>default</value>
         </property>
         <property>
             <name>extract.class.impl</name>
@@ -90,10 +93,6 @@
         </property>
         <property>
             <name>store.mongodb</name>
-            <value></value>
-        </property>
-        <property>
-            <name>store.hbase</name>
             <value></value>
         </property>
         <property>

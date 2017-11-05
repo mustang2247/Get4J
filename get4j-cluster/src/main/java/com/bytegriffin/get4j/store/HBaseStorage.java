@@ -85,6 +85,7 @@ public class HBaseStorage implements Process {
 		 logger.info("线程[{}]保存种子[{}]url为[{}]到HBase数据库中。",Thread.currentThread().getName(),  page.getSeedName() , page.getUrl() );
 	}
 
+	@SuppressWarnings("unlikely-arg-type")
 	public void insertOrUpdate(Table table, Page page) {
 		try {
 			Put put = new Put(Bytes.toBytes(MD5Util.convert(page.getUrl())));
