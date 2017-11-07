@@ -28,6 +28,7 @@ import com.bytegriffin.get4j.net.http.HttpProxy;
 import com.bytegriffin.get4j.send.EmailSender;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
 
 /**
@@ -233,18 +234,15 @@ public final class FileUtil {
 		if (contents == null || contents.isEmpty()) {
 			return;
 		}
-		try {
-			for (String str : contents) {
-				if (Strings.isNullOrEmpty(str)) {
-					break;
-				}
-				Files.append(str + System.getProperty("line.separator"), new File(fileName), Charset.defaultCharset());
+		contents.stream().filter(str -> !Strings.isNullOrEmpty(str)).forEach(str -> {
+			try {
+				Files.asCharSink(new File(fileName), Charset.defaultCharset(), FileWriteMode.APPEND).write(str + System.getProperty("line.separator"));
+			} catch (IOException e) {
+				logger.error("追加文件时出错。", e);
+				EmailSender.sendMail(e);
+				ExceptionCatcher.addException(e);
 			}
-		} catch (IOException e) {
-			logger.error("追加文件时出错。", e);
-			EmailSender.sendMail(e);
-			ExceptionCatcher.addException(e);
-		}
+		});
 	}
 
 	/**
@@ -264,7 +262,7 @@ public final class FileUtil {
 				if (line.trim().equals(content)) {
 					continue;
 				}
-				Files.append(line.trim() + System.getProperty("line.separator"), tempFile, Charset.defaultCharset());
+				Files.asCharSink(tempFile, Charset.defaultCharset(), FileWriteMode.APPEND).write(line.trim() + System.getProperty("line.separator"));
 			}
 			Files.move(tempFile, inFile);
 		} catch (IOException ex) {
@@ -277,7 +275,7 @@ public final class FileUtil {
 	/**
 	 * 在本地磁盘生成页面
 	 *
-	 * @param page    Page
+	 * @param page Page
 	 */
 	public static void downloadPagesToDisk(Page page) {
 		String folderName = Globals.DOWNLOAD_DISK_DIR_CACHE.get(page.getSeedName());
